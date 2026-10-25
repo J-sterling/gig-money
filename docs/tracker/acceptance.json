@@ -43,8 +43,8 @@
   "group": "Milestones",
   "item": "MVP flows work end to end",
   "status": "Partly done",
-  "detail": "Ledger with a separate demo workspace per visitor done 25 Oct: a real £25 sandbox payment recorded from the capture reply with no tunnel. Still to build: AI source tagging, approval screen, sending through PayPal Invoicing.",
-  "next": "Approval loop with a minimal UI.",
+  "detail": "25 Oct, in the browser: AI draft, approve, PayPal invoice INV2-J9XN-QXYT-K4T6-6FTN sent, paid by the sandbox buyer, Check payment marked it paid and the £120 entered the ledger. Still to build: AI source tagging of payments.",
+  "next": "AI source tagging, then the AG Grid ledger.",
   "order": 4,
   "owner": "Claude",
   "effort": "3 days",
@@ -142,9 +142,9 @@
   "id": "P1",
   "group": "Project",
   "item": "PayPal developer platform integrated, sandbox, and central",
-  "status": "Partly done",
-  "detail": "Orders v2 (create, capture), webhooks (register, verify, receive) working in the sandbox. Invoicing still to build.",
-  "next": "Invoicing in the approval loop.",
+  "status": "Done",
+  "detail": "Orders v2 (create with custom_id, capture), Invoicing v2 (create, send, read status) and webhooks (register, verify, receive) all working in the sandbox, 25 Oct.",
+  "next": "",
   "order": 10,
   "owner": "Claude",
   "effort": "in M2-M4",
@@ -291,8 +291,8 @@
   "group": "Judging",
   "item": "Design",
   "status": "Not started",
-  "detail": "A complete, coherent product, not a proof of concept.",
-  "next": "A web UI for every flow; no CLI-only steps for the user."
+  "detail": "A web UI now covers every flow: ledger, Get paid, invoice drafting, approval, pay link, Check payment, reset.",
+  "next": "Polish: AG Grid ledger, source tags, mobile check."
  },
  {
   "id": "J3",
@@ -414,9 +414,9 @@
   "id": "N4",
   "group": "Non-functional",
   "item": "Nothing reaches a client without approval",
-  "status": "Not started",
-  "detail": "Server-enforced: create, send and remind run only after an approval call; one decision per draft; every decision recorded.",
-  "next": "Test that send without approval is refused."
+  "status": "Done",
+  "detail": "approve() is the only path to PayPal Invoicing; a draft is decided once and only in its own workspace; edits validated first. Six offline tests, plus a real sandbox run 25 Oct.",
+  "next": ""
  },
  {
   "id": "N5",
@@ -502,9 +502,9 @@
   "id": "N15",
   "group": "Non-functional",
   "item": "Every action can be traced",
-  "status": "Not started",
-  "detail": "var/events.jsonl plus recorded decisions; the AI's reason shown on each draft.",
-  "next": "Show the reason on the draft card."
+  "status": "Partly done",
+  "detail": "Each draft stores the request, which model wrote it, its reasoning line, the decision time and the PayPal invoice ID; webhook events are logged.",
+  "next": "Show the decision history in the UI."
  },
  {
   "id": "N16",
@@ -518,9 +518,9 @@
   "id": "N17",
   "group": "Non-functional",
   "item": "Saved draft when the free model is unavailable",
-  "status": "Not started",
-  "detail": "When the daily cap or OpenRouter's limit is hit, or the call fails, show a labelled saved example the judge can still approve.",
-  "next": "Build with the approval loop."
+  "status": "Done",
+  "detail": "When the model is slow (20 s limit), out of calls or not set up, a labelled saved example appears and can still be approved. Tested offline.",
+  "next": "See it once live on Render."
  },
  {
   "id": "N18",

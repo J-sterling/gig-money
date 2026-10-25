@@ -104,18 +104,18 @@ footer { color: var(--muted); font-size: 13px; }
       <text class="m" x="34" y="224">public HTTPS for judges</text>
 
       <!-- worker -->
-      <rect class="planned" x="20" y="262" width="220" height="236" rx="4"/>
+      <rect class="built" x="20" y="262" width="220" height="236" rx="4"/>
       <text class="t" x="34" y="288">You (gig worker)</text>
       <text class="s" x="34" y="310">browser: ledger grid,</text>
       <text class="s" x="34" y="326">tax pot, invoice chat,</text>
       <text class="s" x="34" y="342">draft cards</text>
       <text class="s" x="34" y="374">own demo workspace</text>
       <text class="s" x="34" y="390">(signed cookie, built)</text>
-      <path class="wire p" d="M316 294 H244" marker-end="url(#ap)"/>
+      <path class="wire" d="M316 294 H244" marker-end="url(#a)"/>
       <text class="lbl" x="250" y="286">sees</text>
-      <path class="wire p" d="M240 380 H316" marker-end="url(#ap)"/>
+      <path class="wire" d="M240 380 H316" marker-end="url(#a)"/>
       <text class="lbl" x="250" y="372">asks</text>
-      <path class="wire p" d="M244 466 H316" marker-start="url(#ap)" marker-end="url(#ap)"/>
+      <path class="wire" d="M244 466 H316" marker-start="url(#a)" marker-end="url(#a)"/>
       <text class="lbl" x="250" y="458">approves</text>
 
       <!-- seed -->
@@ -147,15 +147,15 @@ footer { color: var(--muted); font-size: 13px; }
       <text class="t" x="354" y="374">Draft the invoice</text>
       <text class="s" x="354" y="396">a sentence becomes a schema-checked draft</text>
 
-      <rect class="planned" x="320" y="434" width="420" height="64" rx="4"/>
-      <text class="n planned-c" x="334" y="460">5</text>
+      <rect class="built" x="320" y="434" width="420" height="64" rx="4"/>
+      <text class="n built-c" x="334" y="460">5</text>
       <text class="t" x="354" y="460">Approval gate</text>
       <text class="s" x="354" y="482">nothing reaches a client without a click</text>
 
       <path class="wire" d="M530 154 V172" marker-end="url(#a)"/>
       <path class="wire" d="M530 240 V258" marker-end="url(#a)"/>
       <path class="wire" d="M530 326 V344" marker-end="url(#a)"/>
-      <path class="wire p" d="M530 412 V430" marker-end="url(#ap)"/>
+      <path class="wire" d="M530 412 V430" marker-end="url(#a)"/>
 
       <!-- paypal -->
       <rect class="frame" x="820" y="40" width="280" height="380" rx="6"/>
@@ -168,9 +168,9 @@ footer { color: var(--muted); font-size: 13px; }
       <rect class="built" x="836" y="200" width="248" height="56" rx="4"/>
       <text class="t" x="850" y="224">Orders v2</text>
       <text class="m" x="850" y="244">create (custom_id), capture</text>
-      <rect class="planned" x="836" y="268" width="248" height="56" rx="4"/>
+      <rect class="built" x="836" y="268" width="248" height="56" rx="4"/>
       <text class="t" x="850" y="292">Invoicing v2</text>
-      <text class="m" x="850" y="312">create, send, remind</text>
+      <text class="m" x="850" y="312">create, send (pay link), status</text>
       <rect class="built" x="836" y="336" width="248" height="56" rx="4"/>
       <text class="t" x="850" y="360">OAuth token</text>
       <text class="m" x="850" y="380">client credentials, cached</text>
@@ -186,7 +186,7 @@ footer { color: var(--muted); font-size: 13px; }
       <text class="m" x="834" y="488">OpenRouter · Gemma 4 fallback</text>
       <path class="wire" d="M740 390 H778 V472 H816" marker-end="url(#a)"/>
       <path class="halo" d="M796 462 V482"/>
-      <path class="wire p" d="M740 482 H796 V296 H832" marker-end="url(#ap)"/>
+      <path class="wire" d="M740 482 H796 V296 H832" marker-end="url(#a)"/>
       <text class="lbl" x="768" y="526">send after approval</text>
 
       <!-- storage -->
@@ -200,8 +200,8 @@ footer { color: var(--muted); font-size: 13px; }
       <rect class="built" x="564" y="610" width="236" height="114" rx="4"/>
       <text class="t" x="578" y="636">Ledger</text>
       <text class="m" x="578" y="658">var/gig-money.db (node:sqlite)</text>
-      <text class="m" x="578" y="676">workspaces, payments</text>
-      <text class="s" x="578" y="706">invoices and decisions next</text>
+      <text class="m" x="578" y="676">workspaces, payments, invoices</text>
+      <text class="s" x="578" y="706">every decision recorded</text>
 
       <rect class="built" x="812" y="610" width="272" height="114" rx="4"/>
       <text class="t" x="826" y="636">Secrets</text>
@@ -225,7 +225,8 @@ footer { color: var(--muted); font-size: 13px; }
         <li>On return, the app captures the order and records the payment from PayPal's reply. No public URL is needed for this.</li>
         <li>PayPal also sends <code>PAYMENT.CAPTURE.COMPLETED</code>. The app checks the signature with PayPal, and the same capture is never recorded twice.</li>
         <li>The tax set-aside and "safe to spend" figures update, labelled as an estimate.</li>
-        <li>The worker types an invoice request, and the model returns a schema-checked draft. <em>Planned:</em> the draft waits at the approval gate; on approval, PayPal Invoicing creates and sends it, and <code>INVOICING.INVOICE.PAID</code> marks it paid.</li>
+        <li>The worker types an invoice request, and the model returns a schema-checked draft (or a labelled saved example if the free model is slow).</li>
+        <li>The draft waits at the approval gate. On approval, and only then, PayPal Invoicing creates and sends it, returning a pay link. When it's paid (<code>INVOICING.INVOICE.PAID</code>, or "Check payment"), the income enters the ledger.</li>
       </ol>
     </section>
     <section>
@@ -235,7 +236,8 @@ footer { color: var(--muted); font-size: 13px; }
         <li>Webhooks registered and verified: real sandbox events over Tailscale Funnel <span class="tag built">built</span></li>
         <li>Ledger with a separate workspace per visitor; a real £25 payment recorded without a tunnel <span class="tag built">built</span></li>
         <li>Invoice drafts from Nemotron 3.5 Super (free): 1.4–60 s on the free tier, so calls stop after 20 s <span class="tag built">built</span></li>
-        <li>Approval screen, PayPal Invoicing, saved fallback draft, AI source tags <span class="tag planned">31 Oct</span></li>
+        <li>Approval screen, PayPal Invoicing and saved fallback draft: a real invoice drafted, approved, sent and paid in the browser <span class="tag built">built</span></li>
+        <li>AI source tags, AG Grid ledger <span class="tag planned">31 Oct</span></li>
         <li>Render deploy, password, daily health check <span class="tag planned">5 Nov</span></li>
         <li>README, video <span class="tag planned">8 Nov</span></li>
         <li>PayPal Agent Toolkit: left out for now (it pulls in 12 known vulnerabilities) <span class="tag later">revisit</span></li>

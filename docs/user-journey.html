@@ -141,8 +141,8 @@ table.map { border-collapse: collapse; width: 100%; min-width: 1080px; }
             <td>Returns the capture, which goes straight into the ledger; also sends <code>PAYMENT.CAPTURE.COMPLETED</code> by webhook, checked with <code>verify-webhook-signature</code>. <span class="built">built</span></td>
             <td>Is the source of truth for every amount in the ledger. <span class="built">built</span></td>
             <td>Nothing yet: the draft is local.</td>
-            <td class="gate"><code>Invoicing v2</code> create, then send, only after approval. <span class="planned">planned</span></td>
-            <td><code>Invoicing v2</code> remind; <code>INVOICING.INVOICE.PAID</code> arrives by webhook when the client pays. <span class="planned">planned</span></td>
+            <td class="gate"><code>Invoicing v2</code> create, then send, only after approval; returns a pay link. <span class="built">built</span></td>
+            <td><code>INVOICING.INVOICE.PAID</code> by webhook, or "Check payment" asks PayPal; the income enters the ledger. <span class="built">built</span> Reminders. <span class="planned">planned</span></td>
             <td>Transaction history to cross-check the ledger <span class="planned">planned</span></td>
           </tr>
           <tr>
@@ -151,7 +151,7 @@ table.map { border-collapse: collapse; width: 100%; min-width: 1080px; }
             <td>Adds the payment to the visitor's ledger, once only, even if both the capture and the webhook arrive. <span class="built">built</span> Tags its source (delivery app, shop, client). <span class="planned">planned</span></td>
             <td>Keeps a running tax set-aside estimate (25% of the last 30 days) and shows what's left to spend. <span class="built">built</span></td>
             <td>Turns the sentence into a schema-checked draft with Nemotron 3.5 Super (free, via OpenRouter). If the model is slow or out of calls, shows a saved example. <span class="built">built</span></td>
-            <td class="gate">Stops. Nothing goes to the client until the worker approves; the server refuses to send anything unapproved. <span class="planned">planned</span></td>
+            <td class="gate">Stops. Nothing goes to the client until the worker approves; the server refuses to send anything unapproved. <span class="built">built</span></td>
             <td>Drafts a polite reminder and suggests sending it; it's sent only on approval.</td>
             <td>Writes a plain-language summary: earned, set aside, owed, paid late.</td>
           </tr>
@@ -279,7 +279,7 @@ stateDiagram-v2
     cancelled --> [*]
 </pre>
       </div>
-      <p class="note">Status on 25 Oct 2026: payments, the ledger, the tax estimate and AI drafting work in the PayPal sandbox; the approval screen and PayPal Invoicing come next (31 Oct). Each visitor gets their own workspace, seeded with a made-up month of income, so judges see a full ledger without real data.</p>
+      <p class="note">Status on 25 Oct 2026: payments, the ledger, the tax estimate and AI drafting work in the PayPal sandbox; the approval screen and PayPal Invoicing work too: a real invoice was drafted, approved, sent and paid. AI source tags and reminders come next. Each visitor gets their own workspace, seeded with a made-up month of income, so judges see a full ledger without real data.</p>
     </section>
   </div>
 </main>
