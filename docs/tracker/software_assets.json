@@ -14,16 +14,16 @@
  },
  {
   "id": "model",
-  "name": "NVIDIA Nemotron 3 Super 120B (free, via OpenRouter)",
+  "name": "NVIDIA Nemotron 3.5 Super (free, via OpenRouter), Gemma 4 31B fallback",
   "category": "AI model",
-  "version": "nvidia/nemotron-3-super-120b-a12b:free",
-  "licence": "NVIDIA Open Model License; OpenRouter terms",
+  "version": "nvidia/nemotron-3.5-super-vl:free, google/gemma-4-31b-it:free",
+  "licence": "NVIDIA Open Model License; Gemma terms; OpenRouter terms",
   "licence_status": "Approved with conditions",
   "where": "OpenRouter (provider servers)",
   "cost": "Free (rate-limited)",
   "lifecycle": "Current",
   "security": "Key server-side only; free endpoints may log prompts, so synthetic data only",
-  "action": "Check daily limits with npm run check:model; app cap MODEL_DAILY_LIMIT=40."
+  "action": "Free endpoints are flaky (25 Oct: Nemotron 3 Super failing upstream, Gemma rate-limited). Keep the 20 s timeout and saved fallback; re-check with npm run check:model before recording."
  },
  {
   "id": "svc-render",

@@ -11,8 +11,10 @@ try {
   console.log(`Key OK. Free tier: ${k.is_free_tier}. Usage today: ${k.usage_daily ?? "n/a"}. Credit limit: ${k.limit ?? "none"}.`);
   const models = (await (await fetch("https://openrouter.ai/api/v1/models")).json()).data;
   const free = models.filter((m) => m.id.endsWith(":free") && m.supported_parameters?.includes("tools"));
-  const chosen = free.some((m) => m.id === mc.modelId);
-  console.log(`Model ${mc.modelId}: ${chosen ? "available, free, supports tools" : "NOT in the free tool-capable list"}.`);
+  for (const id of mc.models) {
+    console.log(`Model ${id}: ${free.some((m) => m.id === id) ? "available, free, supports tools" : "NOT in the free tool-capable list"}.`);
+  }
+  const chosen = mc.models.every((id) => free.some((m) => m.id === id));
   console.log(`App cap: ${mc.dailyLimit} calls a day (MODEL_DAILY_LIMIT).`);
   if (!chosen) console.log("Free models with tool support:\n  " + free.map((m) => m.id).join("\n  "));
 } catch (err) {

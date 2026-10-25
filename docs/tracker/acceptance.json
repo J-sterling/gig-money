@@ -155,8 +155,8 @@
   "group": "Project",
   "item": "AI tool meaningfully used",
   "status": "Partly done",
-  "detail": "Invoice drafting with Nemotron 3 Super (free, via OpenRouter) built and tested offline.",
-  "next": "Run a real draft once the OpenRouter key is in .env.",
+  "detail": "25 Oct: real drafts from Nemotron 3.5 Super (free, via OpenRouter) read client, amount, email and relative due dates correctly in 4 of 4 tries; nothing is sent. Source tagging still to build.",
+  "next": "Use the model for payment source tagging and in the approval screen.",
   "order": 11,
   "owner": "Claude",
   "effort": "in M4",
@@ -446,9 +446,9 @@
   "id": "N8",
   "group": "Non-functional",
   "item": "Feels instant",
-  "status": "Not started",
-  "detail": "Ledger loads in under 1 s for about 500 payments; webhook answered with a 200 in under 2 s (AI tagging runs afterwards); invoice draft ready in under 10 s.",
-  "next": "Measure on the Render URL."
+  "status": "Partly done",
+  "detail": "Draft time with reasoning off: 1.4 s and 4.1 s, but one free-tier request queued 60 s. A 20 s time limit plus a saved fallback draft (N17) keeps the demo responsive.",
+  "next": "Build the saved fallback; measure again on Render."
  },
  {
   "id": "N9",

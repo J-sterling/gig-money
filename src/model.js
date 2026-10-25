@@ -4,19 +4,35 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 
-export const DEFAULT_MODEL = "nvidia/nemotron-3-super-120b-a12b:free";
+// Free endpoints come and go, so MODEL is a comma-separated list: OpenRouter
+// tries them in order within one request (one call against the cap).
+// (nemotron-3-super-120b-a12b:free was failing upstream on 25 Oct, so it's left out.)
+export const DEFAULT_MODELS = [
+  "nvidia/nemotron-3.5-super-vl:free",
+  "google/gemma-4-31b-it:free",
+];
+export const DEFAULT_MODEL = DEFAULT_MODELS[0];
 
 export function modelConfig(env = process.env) {
+  const models = (env.MODEL || DEFAULT_MODELS.join(",")).split(",").map((m) => m.trim()).filter(Boolean);
   return {
     apiKey: env.OPENROUTER_API_KEY ?? "",
-    modelId: env.MODEL || DEFAULT_MODEL,
+    modelId: models[0],
+    models,
     dailyLimit: Number(env.MODEL_DAILY_LIMIT ?? 40),
+    // Free endpoints queue unpredictably (4-60 s seen on 25 Oct), so give up
+    // after this and let the caller show a saved draft instead.
+    timeoutMs: Number(env.MODEL_TIMEOUT_MS ?? 20000),
+    reasoning: env.MODEL_REASONING || "none",
   };
 }
 
-export function createModel({ apiKey, modelId }) {
+export function createModel({ apiKey, modelId, models = [modelId], reasoning = "none" }) {
   if (!apiKey) throw new Error("OPENROUTER_API_KEY must be set in .env (see README: Model).");
-  return createOpenRouter({ apiKey, appName: "Gig Money" })(modelId);
+  // Reasoning off: a draft is simple extraction, and it cut one call from 35 s to 4 s.
+  return createOpenRouter({ apiKey, appName: "Gig Money" })(modelId, {
+    models: models.slice(0, 3), reasoning: { effort: reasoning, exclude: true },
+  });
 }
 
 // Counts model calls per UTC day in a small JSON file.

@@ -31,13 +31,13 @@ Events from the dashboard's Webhooks Simulator are mock events. They fail signat
 
 ## Model
 
-The AI runs on [OpenRouter](https://openrouter.ai)'s free tier, so it runs on OpenRouter's providers, not on your machine. The default is `nvidia/nemotron-3-super-120b-a12b:free`, which supports tool calling and structured output. To use another model, change `MODEL` in `.env`.
+The AI runs on [OpenRouter](https://openrouter.ai)'s free tier, so it runs on OpenRouter's providers, not on your machine. The default is `nvidia/nemotron-3.5-super-vl:free`, with `google/gemma-4-31b-it:free` as a fallback: OpenRouter tries the next one in the same request if a free endpoint is down. Both support tool calling and structured output. To change them, edit `MODEL` (a comma-separated list) in `.env`.
 
 1. Create a free key at openrouter.ai and put it in `.env` as `OPENROUTER_API_KEY`.
 2. `npm run check:model` shows the key's limits and confirms the model is free and supports tools.
 3. `npm run draft -- "invoice Northside Café £120 for Saturday's shoot, due in 14 days"` prints a draft. **Nothing is sent**: drafts only go to PayPal after you approve them.
 
-Free models have daily limits, and the app adds its own cap (`MODEL_DAILY_LIMIT`, default 40 calls a day). Free endpoints may log prompts, so use only made-up data.
+Free models have daily limits, and the app adds its own cap (`MODEL_DAILY_LIMIT`, default 40 calls a day). Free endpoints also queue: on 25 Oct one draft took 1.4 s and another 60 s. The app gives up after `MODEL_TIMEOUT_MS` (20 s) and reasoning is off (`MODEL_REASONING=none`), which is enough for drafting. Free endpoints may log prompts, so use only made-up data.
 
 ## Development
 

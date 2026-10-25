@@ -6,8 +6,9 @@ import { createDailyCap, createModel, modelConfig } from "../src/model.js";
 
 try {
   const mc = modelConfig();
-  const draft = await draftInvoice(process.argv.slice(2).join(" "), { model: createModel(mc), cap: createDailyCap(mc.dailyLimit) });
-  console.log(`Draft (not sent), model ${mc.modelId}:`);
+  const started = Date.now();
+  const { draft, modelId } = await draftInvoice(process.argv.slice(2).join(" "), { model: createModel(mc), cap: createDailyCap(mc.dailyLimit), timeoutMs: mc.timeoutMs });
+  console.log(`Draft (not sent) from ${modelId ?? mc.modelId} in ${((Date.now() - started) / 1000).toFixed(1)} s:`);
   console.log(JSON.stringify(draft, null, 2));
 } catch (err) {
   console.error(err.message);
