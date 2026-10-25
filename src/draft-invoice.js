@@ -14,6 +14,9 @@ export const InvoiceDraft = z.object({
   reason: z.string().min(1).describe("One sentence on how the request was read, for the worker to check"),
 });
 
+// The invoice fields on their own, as stored and approved (the reason is kept separately).
+export const InvoiceFields = InvoiceDraft.omit({ reason: true });
+
 const instructions = `You draft invoices for a UK gig worker who is paid through PayPal.
 Read the request and fill every field. Use GBP unless another currency is named.
 Work out the due date from today's date when it is given as a number of days; if none is given, use 14 days.

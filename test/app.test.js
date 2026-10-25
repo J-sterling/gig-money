@@ -6,10 +6,11 @@ import { after, before, test } from "node:test";
 import { createApp } from "../src/app.js";
 import { openDb } from "../src/db.js";
 import { createEventLog } from "../src/events.js";
+import { createInvoiceBook } from "../src/invoices.js";
 import { createLedger } from "../src/ledger.js";
 
 const quiet = { info() {}, warn() {}, error() {} };
-let server, base, verifyResult, lastOrder;
+let server, base, verifyResult, lastOrder, drafterMode = "ok";
 
 // Fake PayPal: remembers the last order's custom_id so capture can echo it back.
 const paypal = {
@@ -20,13 +21,23 @@ const paypal = {
     purchase_units: [{ payments: { captures: [{ id: "CAP-9", status: "COMPLETED", custom_id: lastOrder?.customId,
       amount: { value: "25.00", currency_code: "GBP" }, create_time: new Date().toISOString() }] } }],
   }),
+  createInvoice: async () => ({ id: "INV2-APP-1" }),
+  sendInvoice: async () => ({ href: "https://www.sandbox.paypal.com/invoice/p/#INV2-APP-1" }),
+  getInvoice: async (id) => ({ id, status: "SENT" }),
+};
+const due = new Date(Date.now() + 14 * 864e5).toISOString().slice(0, 10);
+const drafter = async () => {
+  if (drafterMode === "down") throw new Error("Daily model limit reached (40 calls).");
+  return { draft: { client_name: "Brightside Yoga", client_email: null, amount: 95, currency: "GBP", description: "Class photos", due_date: due, reason: "£95 for class photos." }, modelId: "fake/model:free" };
 };
 
 before(async () => {
   const events = createEventLog(join(mkdtempSync(join(tmpdir(), "gm-")), "events.jsonl"));
-  const ledger = createLedger(openDb(":memory:"));
+  const db = openDb(":memory:");
+  const ledger = createLedger(db);
+  const invoices = createInvoiceBook(db, { paypal, ledger });
   const config = { webhookId: "WID", sessionSecret: "test-secret", publicUrl: "http://localhost" };
-  const app = createApp({ paypal, config, events, ledger, log: quiet });
+  const app = createApp({ paypal, config, events, ledger, invoices, drafter, log: quiet });
   await new Promise((r) => (server = app.listen(0, r)));
   base = `http://localhost:${server.address().port}`;
 });
@@ -72,7 +83,9 @@ test("get paid, approve, return: the payment lands in that visitor's ledger only
   const res = await api(a.cookie, "/get-paid", { method: "POST", body: JSON.stringify({ amount: 25 }) });
   assert.equal((await res.json()).approve_url, "https://sandbox.example/approve");
   assert.match(lastOrder.customId, /^ws_/);
-  assert.match(await (await fetch(`${base}/return?token=ORDER-9`)).text(), /payment recorded/);
+  const back = await fetch(`${base}/return?token=ORDER-9`, { redirect: "manual" });
+  assert.equal(back.status, 303);
+  assert.equal(back.headers.get("location"), "/?paid=1");
   const la = await (await api(a.cookie, "/ledger")).json();
   const lb = await (await api(b.cookie, "/ledger")).json();
   assert.equal(la.payments.length, 11);
@@ -101,4 +114,36 @@ test("reset puts the workspace back to the seed", async () => {
   await fetch(`${base}/return?token=ORDER-9`);
   await api(a.cookie, "/reset", { method: "POST" });
   assert.equal((await (await api(a.cookie, "/ledger")).json()).payments.length, 10);
+});
+
+test("a draft from the model waits for approval, then goes out through PayPal", async () => {
+  drafterMode = "ok";
+  const a = await visitor();
+  const res = await api(a.cookie, "/drafts", { method: "POST", body: JSON.stringify({ request: "bill Brightside Yoga £95 for class photos" }) });
+  assert.equal(res.status, 201);
+  const d = await res.json();
+  assert.equal(d.status, "draft");
+  assert.equal(d.drafted_by, "fake/model:free");
+  const sent = await (await api(a.cookie, `/drafts/${d.id}/approve`, { method: "POST", body: "{}" })).json();
+  assert.equal(sent.status, "sent");
+  assert.equal((await api(a.cookie, `/drafts/${d.id}/approve`, { method: "POST", body: "{}" })).status, 409);
+});
+
+test("when the model is unavailable, a labelled saved draft appears instead (N17)", async () => {
+  drafterMode = "down";
+  const a = await visitor();
+  const d = await (await api(a.cookie, "/drafts", { method: "POST", body: JSON.stringify({ request: "invoice someone" }) })).json();
+  assert.equal(d.drafted_by, "saved example");
+  assert.match(d.reason, /Saved example.*free model limit/);
+  drafterMode = "ok";
+});
+
+test("an empty request is refused", async () => {
+  const a = await visitor();
+  assert.equal((await api(a.cookie, "/drafts", { method: "POST", body: JSON.stringify({ request: " " }) })).status, 400);
+});
+
+test("the page is served at /", async () => {
+  const res = await fetch(`${base}/`);
+  assert.match(await res.text(), /<title>Gig Money<\/title>/);
 });

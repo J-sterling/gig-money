@@ -1,0 +1,111 @@
+// Invoice drafts and the approval gate (N4). Drafting never touches PayPal;
+// approve() is the only path that creates and sends a PayPal invoice, and a
+// draft can be approved or rejected once (a failed send can be retried).
+import { randomBytes } from "node:crypto";
+import { InvoiceFields } from "./draft-invoice.js";
+
+export class GateError extends Error {
+  constructor(status, message) { super(message); this.status = status; }
+}
+
+const EDITABLE = ["client_name", "client_email", "amount", "currency", "description", "due_date"];
+
+export function createInvoiceBook(db, { paypal, ledger, now = () => new Date() }) {
+  const insert = db.prepare(`INSERT INTO invoices (id, workspace_id, status, request, draft, drafted_by, reason, created_at)
+    VALUES (?, ?, 'draft', ?, ?, ?, ?, ?)`);
+  const one = db.prepare("SELECT * FROM invoices WHERE id = ? AND workspace_id = ?");
+  const byPayPalId = db.prepare("SELECT * FROM invoices WHERE paypal_id = ?");
+  const all = db.prepare("SELECT * FROM invoices WHERE workspace_id = ? ORDER BY created_at DESC");
+  // The gate: only a draft (or a failed send) in this workspace can move on, and only once.
+  const claim = db.prepare(`UPDATE invoices SET status = 'sending', decided_at = ?, draft = ?, error = NULL
+    WHERE id = ? AND workspace_id = ? AND status IN ('draft', 'failed')`);
+  const reject = db.prepare(`UPDATE invoices SET status = 'rejected', decided_at = ?, decision_note = ?
+    WHERE id = ? AND workspace_id = ? AND status = 'draft'`);
+  const sent = db.prepare("UPDATE invoices SET status = 'sent', paypal_id = ?, pay_url = ?, sent_at = ? WHERE id = ?");
+  const failed = db.prepare("UPDATE invoices SET status = 'failed', error = ? WHERE id = ?");
+  const paid = db.prepare("UPDATE invoices SET status = 'paid', paid_at = ? WHERE id = ? AND status = 'sent'");
+  const wipe = db.prepare("DELETE FROM invoices WHERE workspace_id = ?");
+
+  const view = (row) => row && { ...row, draft: JSON.parse(row.draft) };
+  const mustGet = (ws, id) => {
+    const row = one.get(id, ws);
+    if (!row) throw new GateError(404, "No such draft in this demo.");
+    return row;
+  };
+
+  function markPaid(row, invoice) {
+    if (paid.run(now().toISOString(), row.id).changes !== 1) return false;
+    const draft = JSON.parse(row.draft);
+    const tx = invoice?.payments?.transactions?.[0];
+    const amount = invoice?.payments?.paid_amount ?? { value: String(draft.amount), currency_code: draft.currency };
+    ledger.recordInvoicePayment(row.workspace_id, {
+      id: `INV-${tx?.payment_id ?? row.paypal_id}`, amount, payer: draft.client_name,
+      note: `Invoice: ${draft.description}`, paid_at: tx?.payment_date ?? now().toISOString(),
+    });
+    return true;
+  }
+
+  return {
+    create(ws, { request, draft, draftedBy, reason }) {
+      const id = "drf_" + randomBytes(6).toString("hex");
+      insert.run(id, ws, request ?? null, JSON.stringify(InvoiceFields.parse(draft)), draftedBy, reason ?? null, now().toISOString());
+      return view(one.get(id, ws));
+    },
+
+    list: (ws) => all.all(ws).map(view),
+
+    async approve(ws, id, edits = {}) {
+      const row = mustGet(ws, id);
+      const merged = { ...JSON.parse(row.draft) };
+      for (const k of EDITABLE) if (k in edits) merged[k] = edits[k];
+      const check = InvoiceFields.safeParse(merged);
+      if (!check.success) throw new GateError(400, "The edited draft isn't valid: " + check.error.issues.map((i) => `${i.path.join(".")} ${i.message}`).join("; "));
+      if (check.data.due_date < now().toISOString().slice(0, 10)) throw new GateError(400, "The due date is in the past.");
+      if (claim.run(now().toISOString(), JSON.stringify(check.data), id, ws).changes !== 1) {
+        throw new GateError(409, `This draft is already ${row.status}; it can't be approved again.`);
+      }
+      const d = check.data;
+      try {
+        const inv = await paypal.createInvoice({
+          reference: ws, clientName: d.client_name, clientEmail: d.client_email, amount: d.amount, currency: d.currency,
+          description: d.description, dueDate: d.due_date, note: "Gig Money demo invoice (PayPal sandbox).",
+        });
+        const sendReply = await paypal.sendInvoice(inv.id);
+        const payUrl = sendReply?.href ?? sendReply?.links?.find((l) => l.rel === "payer-view")?.href ?? inv.detail?.metadata?.recipient_view_url ?? null;
+        sent.run(inv.id, payUrl, now().toISOString(), id);
+      } catch (err) {
+        failed.run(err.message, id);
+        throw new GateError(502, `PayPal didn't take the invoice: ${err.message}`);
+      }
+      return view(one.get(id, ws));
+    },
+
+    reject(ws, id, note) {
+      const row = mustGet(ws, id);
+      if (reject.run(now().toISOString(), String(note ?? "").slice(0, 300) || null, id, ws).changes !== 1) {
+        throw new GateError(409, `This draft is already ${row.status}.`);
+      }
+      return view(one.get(id, ws));
+    },
+
+    // From a verified INVOICING.INVOICE.PAID webhook.
+    recordPaidWebhook(event) {
+      const invoice = event.resource?.invoice ?? event.resource;
+      const row = invoice?.id && byPayPalId.get(invoice.id);
+      if (!row || row.workspace_id !== invoice.detail?.reference) return { recorded: false, reason: "unknown invoice" };
+      return { recorded: markPaid(row, invoice), reason: null };
+    },
+
+    // Asks PayPal directly; this is how it works locally without webhooks.
+    async refresh(ws, id) {
+      const row = mustGet(ws, id);
+      if (row.status === "sent") {
+        const inv = await paypal.getInvoice(row.paypal_id);
+        if (inv.status === "PAID" || inv.status === "MARKED_AS_PAID") markPaid(row, inv);
+      }
+      return view(one.get(id, ws));
+    },
+
+    reset: (ws) => wipe.run(ws).changes,
+  };
+}

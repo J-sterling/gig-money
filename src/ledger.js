@@ -52,6 +52,12 @@ export function createLedger(db, { setAsideRate = 0.25, now = () => new Date() }
 
     addSeed: (workspaceId, p) => add(workspaceId, { ...p, recorded_via: "seed" }),
 
+    // A paid PayPal invoice becomes income in the ledger.
+    recordInvoicePayment: (workspaceId, { id, amount, payer, note, paid_at }) => add(workspaceId, {
+      id, amount_pence: pence(amount.value), currency: amount.currency_code, payer, note,
+      source: "Invoice", source_by: "invoice", captured_at: paid_at, recorded_via: "invoice",
+    }),
+
     payments: (workspaceId) => list.all(workspaceId),
 
     // The last 30 days: earned, set aside and safe to spend, in pence.

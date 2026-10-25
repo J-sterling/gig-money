@@ -4,7 +4,7 @@ A PayPal money assistant for gig workers. Payments arrive from PayPal by webhook
 
 > Built for the PayPal AI Hackathon 2026. Runs against the **PayPal sandbox only**; no real money moves.
 
-**Status (25 Oct 2026):** PayPal plumbing (credential check, verified webhooks, test order), a ledger with a separate demo workspace per visitor, and the first AI step: drafting an invoice from a sentence. The approval screen and sending through PayPal Invoicing come next.
+**Status (25 Oct 2026):** a working web app at `/`: a ledger with a separate demo workspace per visitor, "Get paid" through PayPal Orders, AI invoice drafts, and an approval gate. Approved drafts go out through PayPal Invoicing, and paying the invoice adds the income to the ledger. Still to come: AI source tagging, the password gate and the Render deploy.
 
 ## Run it
 
@@ -28,6 +28,17 @@ Needs Node 22.13 or newer (for the built-in SQLite) and a free PayPal developer 
 **No tunnel? The ledger still works.** When you approve a payment, `/return` records it from PayPal's own capture reply. Webhooks only add the verified event, so they're optional when running locally.
 
 Events from the dashboard's Webhooks Simulator are mock events. They fail signature verification, so they're logged with `"verified": false` and never reach the ledger.
+
+## Using the app
+
+`npm start`, then open `http://localhost:3000` (or your `PORT`).
+
+1. **Get paid:** approve the sandbox payment as the sandbox buyer. It lands in your ledger.
+2. **Ask for an invoice** in a sentence. The AI drafts it; if the free model is slow or out of calls, a clearly labelled saved example appears instead.
+3. **Approve and send** (edit first if you like). Only then does the server create and send the invoice through PayPal Invoicing. You get a pay link instead of an email to the client.
+4. Open the **pay link**, pay as the sandbox buyer, then **Check payment**: it's marked paid and the income is added to the ledger.
+
+**Reset my demo** puts your workspace back to the starting month of example income.
 
 ## Model
 

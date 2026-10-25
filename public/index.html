@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Gig Money</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<header class="top">
+  <div class="brand"><h1>Gig Money</h1><span class="badge">PayPal sandbox · no real money</span></div>
+  <button type="button" id="reset" class="ghost">Reset my demo</button>
+</header>
+
+<main>
+  <p id="notice" class="notice" role="status" hidden></p>
+
+  <section class="tiles" aria-label="Last 30 days">
+    <div class="tile"><span class="lab">Earned, last 30 days</span><span class="num" id="earned">—</span></div>
+    <div class="tile"><span class="lab">Set aside for tax</span><span class="num" id="setaside">—</span><span class="lab" id="setaside-note">—</span></div>
+    <div class="tile good"><span class="lab">Safe to spend</span><span class="num" id="safe">—</span></div>
+  </section>
+
+  <div class="cols">
+    <section class="card" aria-labelledby="ledger-h">
+      <h2 id="ledger-h">Ledger</h2>
+      <div class="scroll"><table id="ledger"><thead><tr><th>Date</th><th>From</th><th>Source</th><th class="r">Amount</th></tr></thead><tbody></tbody></table></div>
+    </section>
+
+    <div class="side">
+      <section class="card" aria-labelledby="paid-h">
+        <h2 id="paid-h">Get paid</h2>
+        <p class="muted">Creates a sandbox payment. Approve it on PayPal as the sandbox buyer and it lands in your ledger.</p>
+        <form id="getpaid" class="row">
+          <label for="amount">Amount (£)</label>
+          <input id="amount" name="amount" type="number" min="1" max="500" step="0.01" value="25" required>
+          <button type="submit">Get paid</button>
+        </form>
+      </section>
+
+      <section class="card" aria-labelledby="inv-h">
+        <h2 id="inv-h">Ask for an invoice</h2>
+        <form id="ask" class="stack">
+          <label for="request">Say who, how much and when</label>
+          <textarea id="request" name="request" rows="2" maxlength="500" required>invoice Northside Café £120 for Saturday's shoot, due in 14 days</textarea>
+          <button type="submit" id="ask-btn">Draft it</button>
+        </form>
+        <p class="muted small">The AI drafts; nothing goes to PayPal or the client until you approve.</p>
+        <div id="drafts"></div>
+      </section>
+
+      <section class="card" aria-labelledby="sent-h">
+        <h2 id="sent-h">Invoices</h2>
+        <div id="invoices"><p class="muted">No invoices yet.</p></div>
+      </section>
+    </div>
+  </div>
+</main>
+<footer class="foot">Tax figures are an estimate, not tax advice. All data here is made up and runs in the PayPal sandbox.</footer>
+<script src="/app.js"></script>
+</body>
+</html>

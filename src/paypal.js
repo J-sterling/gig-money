@@ -30,11 +30,11 @@ export function createPayPal({ baseUrl, clientId, clientSecret, fetch = globalTh
     return { token, expiresAt };
   }
 
-  async function call(method, path, what, payload, rawBody) {
+  async function call(method, path, what, payload, rawBody, extraHeaders = {}) {
     const { token: t } = await getToken();
     const res = await fetch(`${baseUrl}${path}`, {
       method,
-      headers: { Authorization: `Bearer ${t}`, "Content-Type": "application/json" },
+      headers: { Authorization: `Bearer ${t}`, "Content-Type": "application/json", ...extraHeaders },
       body: rawBody ?? (payload === undefined ? undefined : JSON.stringify(payload)),
     });
     const text = await res.text();
@@ -59,6 +59,19 @@ export function createPayPal({ baseUrl, clientId, clientSecret, fetch = globalTh
         purchase_units: [{ amount: { currency_code: currency, value }, custom_id: customId, description }],
         payment_source: { paypal: { experience_context: { return_url: returnUrl, cancel_url: cancelUrl } } },
       }),
+    // Invoicing v2. reference carries the demo workspace so INVOICING.INVOICE.PAID finds its way back.
+    createInvoice: ({ reference, clientName, clientEmail, amount, currency, description, dueDate, note }) =>
+      call("POST", "/v2/invoicing/invoices", "Creating the invoice", {
+        detail: { currency_code: currency, reference, note, payment_term: { due_date: dueDate } },
+        primary_recipients: [{ billing_info: { business_name: clientName, ...(clientEmail ? { email_address: clientEmail } : {}) } }],
+        items: [{ name: description, quantity: "1", unit_amount: { currency_code: currency, value: amount.toFixed(2) } }],
+      }, undefined, { Prefer: "return=representation" }),
+    // send_to_recipient false: PayPal returns a pay link instead of emailing anyone.
+    sendInvoice: (id) =>
+      call("POST", `/v2/invoicing/invoices/${encodeURIComponent(id)}/send`, "Sending the invoice", {
+        send_to_invoicer: false, send_to_recipient: false,
+      }),
+    getInvoice: (id) => call("GET", `/v2/invoicing/invoices/${encodeURIComponent(id)}`, "Reading the invoice"),
     captureOrder: (id) => call("POST", `/v2/checkout/orders/${encodeURIComponent(id)}/capture`, "Capturing the order", {}),
     // PayPal compares the event byte for byte, so the raw body is spliced in
     // rather than re-serialised.

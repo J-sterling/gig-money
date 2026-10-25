@@ -1,10 +1,17 @@
 // HTTP routes. Built as a factory so tests can pass a fake PayPal client.
+import { fileURLToPath } from "node:url";
 import express from "express";
+import { GateError } from "./invoices.js";
+import { savedDraft, whyNoModel } from "./saved-draft.js";
 import { seedWorkspace } from "./seed.js";
 import { COOKIE, newWorkspaceId, readCookie, sign, verify } from "./workspaces.js";
 
-export function createApp({ paypal, config, events, ledger, log = console }) {
+const PUBLIC_DIR = fileURLToPath(new URL("../public", import.meta.url));
+
+// drafter(request) -> { draft, modelId }; throws when the model is unavailable.
+export function createApp({ paypal, config, events, ledger, invoices, drafter, log = console }) {
   const app = express();
+  app.disable("x-powered-by");
 
   app.get("/health", (_req, res) => res.json({ ok: true, env: "sandbox" }));
 
@@ -38,7 +45,8 @@ export function createApp({ paypal, config, events, ledger, log = console }) {
       received_at: new Date().toISOString(),
     });
     // Only verified events may change the ledger (N3).
-    const result = verified ? ledger.recordWebhook(event) : { recorded: false, reason: "not verified" };
+    let result = { recorded: false, reason: "not verified" };
+    if (verified) result = event.event_type === "INVOICING.INVOICE.PAID" ? invoices.recordPaidWebhook(event) : ledger.recordWebhook(event);
     log.info(`Webhook ${event.event_type} ${event.id} ${verified ? "verified" : "NOT verified (logged only)"}; ledger: ${result.recorded ? "recorded" : result.reason}`);
     // 200 either way so PayPal stops retrying.
     res.json({ received: true, verified });
@@ -55,13 +63,14 @@ export function createApp({ paypal, config, events, ledger, log = console }) {
     try {
       const order = await paypal.captureOrder(id);
       const result = ledger.recordCapture(order);
-      res.send(`Order ${order.id} ${order.status.toLowerCase()}. Ledger: ${result.recorded ? "payment recorded" : result.reason}.`);
+      log.info(`Order ${order.id} ${order.status}; ledger: ${result.recorded ? "payment recorded" : result.reason}`);
+      res.redirect(303, `/?paid=${result.recorded ? "1" : "0"}`);
     } catch (err) {
       res.status(502).send(err.message);
     }
   });
 
-  app.get("/cancel", (_req, res) => res.send("Payment cancelled. Nothing was charged."));
+  app.get("/cancel", (_req, res) => res.redirect(303, "/?cancelled=1"));
 
   // ---- Demo workspace API ----
   const api = express.Router();
@@ -100,11 +109,47 @@ export function createApp({ paypal, config, events, ledger, log = console }) {
     }
   });
 
+  // ---- Invoices: draft, then approve or reject (the gate is in invoices.js) ----
+  api.get("/invoices", (req, res) => res.json(invoices.list(req.workspaceId)));
+
+  api.post("/drafts", async (req, res) => {
+    const request = String(req.body?.request ?? "").trim();
+    if (!request) return res.status(400).json({ error: "Describe the invoice, e.g. \"invoice Northside Café £120 for Saturday's shoot, due in 14 days\"." });
+    if (request.length > 500) return res.status(400).json({ error: "Keep the request under 500 characters." });
+    let made;
+    try {
+      const { draft, modelId } = await drafter(request);
+      const { reason, ...fields } = draft;
+      made = { draft: fields, reason, draftedBy: modelId ?? "model" };
+    } catch (err) {
+      log.warn(`Draft fell back to the saved example: ${err.message}`);
+      const { draft, draftedBy } = savedDraft(whyNoModel(err));
+      const { reason, ...fields } = draft;
+      made = { draft: fields, reason, draftedBy };
+    }
+    res.status(201).json(invoices.create(req.workspaceId, { request, ...made }));
+  });
+
+  const gate = (fn) => async (req, res) => {
+    try {
+      res.json(await fn(req));
+    } catch (err) {
+      if (err instanceof GateError) return res.status(err.status).json({ error: err.message });
+      log.error(err.message);
+      res.status(500).json({ error: "Something went wrong. Try again." });
+    }
+  };
+  api.post("/drafts/:id/approve", gate((req) => invoices.approve(req.workspaceId, req.params.id, req.body?.edits ?? {})));
+  api.post("/drafts/:id/reject", gate((req) => invoices.reject(req.workspaceId, req.params.id, req.body?.note)));
+  api.post("/invoices/:id/refresh", gate((req) => invoices.refresh(req.workspaceId, req.params.id)));
+
   api.post("/reset", (req, res) => {
     ledger.reset(req.workspaceId);
+    invoices.reset(req.workspaceId);
     res.json({ seeded: seedWorkspace(ledger, req.workspaceId) });
   });
 
   app.use("/api", api);
+  app.use(express.static(PUBLIC_DIR));
   return app;
 }
