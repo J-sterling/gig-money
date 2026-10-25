@@ -52,10 +52,11 @@ export function createPayPal({ baseUrl, clientId, clientSecret, fetch = globalTh
         url,
         event_types: eventTypes.map((name) => ({ name })),
       }),
-    createOrder: ({ value, currency = "GBP", returnUrl, cancelUrl }) =>
+    // customId tags the payment with its demo workspace so the capture and webhook find their way back.
+    createOrder: ({ value, currency = "GBP", returnUrl, cancelUrl, customId, description }) =>
       call("POST", "/v2/checkout/orders", "Creating the order", {
         intent: "CAPTURE",
-        purchase_units: [{ amount: { currency_code: currency, value } }],
+        purchase_units: [{ amount: { currency_code: currency, value }, custom_id: customId, description }],
         payment_source: { paypal: { experience_context: { return_url: returnUrl, cancel_url: cancelUrl } } },
       }),
     captureOrder: (id) => call("POST", `/v2/checkout/orders/${encodeURIComponent(id)}/capture`, "Capturing the order", {}),

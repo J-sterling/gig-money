@@ -1,5 +1,6 @@
 // Settings from the environment (.env locally). Sandbox only: the app refuses
 // to start against live PayPal so a live key can never be used by mistake.
+import { randomBytes } from "node:crypto";
 import dotenv from "dotenv";
 
 dotenv.config({ quiet: true });
@@ -19,6 +20,9 @@ export function loadConfig(env = process.env) {
     webhookId: env.PAYPAL_WEBHOOK_ID ?? "",
     port,
     publicUrl: (env.PUBLIC_URL ?? `http://localhost:${port}`).replace(/\/$/, ""),
+    // Signs the demo-workspace cookie. Set it on any shared deploy; a random one is used otherwise.
+    sessionSecret: env.SESSION_SECRET || randomBytes(32).toString("hex"),
+    setAsideRate: Number(env.TAX_SET_ASIDE_RATE ?? 0.25),
   };
 }
 

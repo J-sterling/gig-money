@@ -4,11 +4,11 @@ A PayPal money assistant for gig workers. Payments arrive from PayPal by webhook
 
 > Built for the PayPal AI Hackathon 2026. Runs against the **PayPal sandbox only**; no real money moves.
 
-**Status (25 Oct 2026):** PayPal plumbing (credential check, verified webhooks, test order) and the first AI step: drafting an invoice from a sentence. The ledger, approval screen and sending through PayPal Invoicing come next.
+**Status (25 Oct 2026):** PayPal plumbing (credential check, verified webhooks, test order), a ledger with a separate demo workspace per visitor, and the first AI step: drafting an invoice from a sentence. The approval screen and sending through PayPal Invoicing come next.
 
 ## Run it
 
-Needs Node 22 or newer and a free PayPal developer account.
+Needs Node 22.13 or newer (for the built-in SQLite) and a free PayPal developer account. Data is kept in `var/gig-money.db`.
 
 1. **Sandbox app.** Sign in at [developer.paypal.com](https://developer.paypal.com) → Apps & Credentials → **Sandbox** tab → Create App (Merchant). The sandbox already has a business account (the seller) and a personal account (the buyer); find the buyer's login under Testing Tools → Sandbox Accounts.
 2. **Configure.**
@@ -24,6 +24,8 @@ Needs Node 22 or newer and a free PayPal developer account.
    ```
    Restart `npm start` so it picks up `PAYPAL_WEBHOOK_ID`. Re-running the command with the same URL reuses the existing webhook. To undo it, run `npm run webhook:remove`, which deletes the webhook at PayPal and clears the ID in `.env`.
 4. **Make a test payment.** `npm run order:create` prints a PayPal link. Approve it as the sandbox **personal** account; you're sent back to `/return`, which captures the order. Open `/events`: `PAYMENT.CAPTURE.COMPLETED` should be listed with `"verified": true`.
+
+**No tunnel? The ledger still works.** When you approve a payment, `/return` records it from PayPal's own capture reply. Webhooks only add the verified event, so they're optional when running locally.
 
 Events from the dashboard's Webhooks Simulator are mock events. They fail signature verification, so they're logged with `"verified": false` and never reach the ledger.
 
