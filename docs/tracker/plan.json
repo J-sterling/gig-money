@@ -1,10 +1,10 @@
 [
  {
   "budget_usd_month": 25,
-  "hosting_usd_per_hour": 0,
+  "hosting_usd_per_hour": 0.0097,
   "model_usd_month_estimate": 0,
   "exported_at": "2026-10-24T23:00:00Z",
-  "pending": "Render hosting, once chosen (model is free via OpenRouter)",
+  "pending": "Render Starter charges once deployed (model is free via OpenRouter)",
   "run_start": "2026-11-10",
   "run_end": "2026-12-15"
  }

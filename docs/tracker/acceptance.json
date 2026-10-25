@@ -42,14 +42,27 @@
   "id": "M4",
   "group": "Milestones",
   "item": "MVP flows work end to end",
-  "status": "Not started",
-  "detail": "Income ledger, tax set-aside estimate, AI-drafted invoice with approval before send, overdue reminder.",
-  "next": "Build after M3; seed script creates sandbox payments.",
+  "status": "Partly done",
+  "detail": "Ledger with a separate demo workspace per visitor done 25 Oct: a real £25 sandbox payment recorded from the capture reply with no tunnel. Still to build: AI source tagging, approval screen, sending through PayPal Invoicing.",
+  "next": "Approval loop with a minimal UI.",
   "order": 4,
   "owner": "Claude",
   "effort": "3 days",
   "blocking": true,
-  "due": "2026-11-07"
+  "due": "2026-10-31"
+ },
+ {
+  "id": "M4b",
+  "group": "Milestones",
+  "item": "Render deploy and judge path working",
+  "status": "Not started",
+  "detail": "Render Starter (always on), password gate, saved fallback drafts, daily health check.",
+  "next": "Deploy once the approval loop works.",
+  "order": 5,
+  "owner": "Claude",
+  "effort": "1 day",
+  "blocking": true,
+  "due": "2026-11-05"
  },
  {
   "id": "M5",
@@ -58,11 +71,11 @@
   "status": "Not started",
   "detail": "README with judge setup steps; video under 3 minutes.",
   "next": "Script the video from the user journey.",
-  "order": 5,
+  "order": 6,
   "owner": "Claude + you",
   "effort": "1 day",
   "blocking": true,
-  "due": "2026-11-10"
+  "due": "2026-11-08"
  },
  {
   "id": "M6",
@@ -71,7 +84,7 @@
   "status": "Not started",
   "detail": "Devpost closes Thu 12 Nov, 12:00 PT (20:00 UK).",
   "next": "Submit Wed 11 Nov, a day early.",
-  "order": 6,
+  "order": 7,
   "owner": "You",
   "effort": "1 h",
   "blocking": true,
@@ -84,7 +97,7 @@
   "status": "Partly done",
   "detail": "You are an adult and not a PayPal employee.",
   "next": "Check your employer against PayPal's affiliates (Venmo, Braintree, Xoom, Honey, Zettle, Paidy, Hyperwallet and others).",
-  "order": 7,
+  "order": 8,
   "owner": "You",
   "effort": "10 min",
   "blocking": true
@@ -112,7 +125,7 @@
   "status": "Not started",
   "detail": "Join at paypalaihackathon.devpost.com.",
   "next": "Click Join Hackathon.",
-  "order": 8,
+  "order": 9,
   "owner": "You",
   "effort": "5 min",
   "blocking": true
@@ -132,7 +145,7 @@
   "status": "Partly done",
   "detail": "Orders v2 (create, capture), webhooks (register, verify, receive) working in the sandbox. Invoicing still to build.",
   "next": "Invoicing in the approval loop.",
-  "order": 9,
+  "order": 10,
   "owner": "Claude",
   "effort": "in M2-M4",
   "blocking": true
@@ -144,7 +157,7 @@
   "status": "Partly done",
   "detail": "Invoice drafting with Nemotron 3 Super (free, via OpenRouter) built and tested offline.",
   "next": "Run a real draft once the OpenRouter key is in .env.",
-  "order": 10,
+  "order": 11,
   "owner": "Claude",
   "effort": "in M4",
   "blocking": true
@@ -156,7 +169,7 @@
   "status": "Not started",
   "detail": "Rule: the project must install and run consistently and work as depicted.",
   "next": "Record the video from the real build only.",
-  "order": 11,
+  "order": 12,
   "owner": "Claude + you",
   "effort": "",
   "blocking": true
@@ -176,7 +189,7 @@
   "status": "Not started",
   "detail": "Devpost description.",
   "next": "Draft from the user journey.",
-  "order": 12,
+  "order": 13,
   "owner": "Claude",
   "effort": "1 h",
   "blocking": true
@@ -188,7 +201,7 @@
   "status": "Not started",
   "detail": "README setup and run instructions, or a hosted URL. A mockup or static prototype doesn't count.",
   "next": "Do both: README steps plus a Render URL.",
-  "order": 13,
+  "order": 14,
   "owner": "Claude",
   "effort": "half a day",
   "blocking": true
@@ -200,7 +213,7 @@
   "status": "Not started",
   "detail": "GitHub, public. Seed data and sandbox setup must be in the repo.",
   "next": "Create with gh after you agree.",
-  "order": 14,
+  "order": 15,
   "owner": "Claude",
   "effort": "30 min",
   "blocking": true
@@ -212,7 +225,7 @@
   "status": "Partly done",
   "detail": "Apache 2.0 LICENSE in the repo (local, not pushed yet).",
   "next": "Check About shows it after the first push.",
-  "order": 15,
+  "order": 16,
   "owner": "Claude",
   "effort": "5 min",
   "blocking": true
@@ -224,7 +237,7 @@
   "status": "Not started",
   "detail": "Must show the project working; no third-party trademarks or copyrighted music without permission.",
   "next": "Use no music or licence-free music only.",
-  "order": 16,
+  "order": 17,
   "owner": "You",
   "effort": "half a day",
   "blocking": true
@@ -236,7 +249,7 @@
   "status": "Not started",
   "detail": "Rules ask for any sandbox login details or keys judges need, free until judging ends 15 Dec.",
   "next": "Decide: judges create their own sandbox app, or sandbox-only details in the testing instructions. Never live keys.",
-  "order": 17,
+  "order": 18,
   "owner": "Claude + you",
   "effort": "30 min",
   "blocking": true
@@ -248,9 +261,21 @@
   "status": "Not started",
   "detail": "Judging runs 1-15 Dec.",
   "next": "Keep the Render service up; check it on 1 Dec.",
-  "order": 18,
+  "order": 19,
   "owner": "You",
   "effort": "",
+  "blocking": true
+ },
+ {
+  "id": "S8",
+  "group": "Submission",
+  "item": "Testing instructions with the sandbox buyer login",
+  "status": "Not started",
+  "detail": "Demo URL and password, sandbox buyer email and password (Devpost testing field only, never the repo), 6 steps to try, known limits.",
+  "next": "Write after the Render deploy.",
+  "order": 20,
+  "owner": "Claude + you",
+  "effort": "30 min",
   "blocking": true
  },
  {
@@ -294,6 +319,18 @@
   "next": "Script from the user journey; rehearse under 3 min."
  },
  {
+  "id": "J6",
+  "group": "Judging",
+  "item": "A judge can test it end to end on the hosted demo",
+  "status": "Not started",
+  "detail": "Password, own workspace, Get paid £25 as the sandbox buyer, AI invoice draft, approve and send, pay the invoice, reset.",
+  "next": "Walk it in two private windows before submitting.",
+  "order": 21,
+  "owner": "You + Claude",
+  "effort": "1 h",
+  "blocking": true
+ },
+ {
   "id": "B1",
   "group": "Prizes",
   "item": "Best Use of PayPal + AI (Honorable Mention, $5k)",
@@ -316,7 +353,7 @@
   "status": "Not started",
   "detail": "Biggest sponsor prize. The income ledger is a natural grid.",
   "next": "Build the ledger with AG Grid Community.",
-  "order": 19,
+  "order": 22,
   "owner": "Claude",
   "effort": "half a day",
   "blocking": false
@@ -328,7 +365,7 @@
   "status": "Not started",
   "detail": "Hosting for the demo and a stable webhook URL.",
   "next": "Only one sponsor prize can be won; AG Grid is worth more.",
-  "order": 20,
+  "order": 23,
   "owner": "Claude",
   "effort": "2 h",
   "blocking": false
@@ -401,8 +438,8 @@
   "id": "N7",
   "group": "Non-functional",
   "item": "Repeatable demo",
-  "status": "Not started",
-  "detail": "The seed script resets the data to the same known state; webhook handling survives retries.",
+  "status": "Partly done",
+  "detail": "Each new workspace is seeded with the same month of made-up income; /api/reset restores it. Capture reply and webhook record a payment once.",
   "next": "Run seed twice and compare the ledger."
  },
  {
@@ -468,5 +505,29 @@
   "status": "Not started",
   "detail": "var/events.jsonl plus recorded decisions; the AI's reason shown on each draft.",
   "next": "Show the reason on the draft card."
+ },
+ {
+  "id": "N16",
+  "group": "Non-functional",
+  "item": "Each visitor gets their own demo workspace",
+  "status": "Partly done",
+  "detail": "Signed cookie per visitor; orders carry the workspace in custom_id, so a payment lands in that visitor's ledger only. Proven with a real sandbox payment 25 Oct.",
+  "next": "Invoices carry the workspace too."
+ },
+ {
+  "id": "N17",
+  "group": "Non-functional",
+  "item": "Saved draft when the free model is unavailable",
+  "status": "Not started",
+  "detail": "When the daily cap or OpenRouter's limit is hit, or the call fails, show a labelled saved example the judge can still approve.",
+  "next": "Build with the approval loop."
+ },
+ {
+  "id": "N18",
+  "group": "Non-functional",
+  "item": "Daily health check until 15 Dec",
+  "status": "Not started",
+  "detail": "Scheduled GitHub Actions job checks /health and a dry-run draft on the Render URL.",
+  "next": "Add with the Render deploy."
  }
 ]
