@@ -143,7 +143,11 @@ test("an empty request is refused", async () => {
   assert.equal((await api(a.cookie, "/drafts", { method: "POST", body: JSON.stringify({ request: " " }) })).status, 400);
 });
 
-test("the page is served at /", async () => {
-  const res = await fetch(`${base}/`);
-  assert.match(await res.text(), /<title>Gig Money<\/title>/);
+test("loading the page sets the workspace cookie, so its data requests share one workspace", async () => {
+  const page = await fetch(`${base}/`);
+  assert.match(await page.text(), /<title>Gig Money<\/title>/);
+  const cookie = page.headers.get("set-cookie").split(";")[0];
+  const [l, i] = await Promise.all([api(cookie, "/ledger"), api(cookie, "/invoices")]);
+  assert.equal(l.headers.get("set-cookie"), null);
+  assert.equal(i.headers.get("set-cookie"), null);
 });

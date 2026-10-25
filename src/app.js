@@ -73,9 +73,10 @@ export function createApp({ paypal, config, events, ledger, invoices, drafter, l
   app.get("/cancel", (_req, res) => res.redirect(303, "/?cancelled=1"));
 
   // ---- Demo workspace API ----
-  const api = express.Router();
-  api.use(express.json({ limit: "10kb" }));
-  api.use((req, res, next) => {
+  // Finds (or creates and seeds) the visitor's workspace. It runs when the
+  // page itself loads, so the page's parallel data requests all share one
+  // cookie instead of each creating a workspace.
+  function workspace(req, res, next) {
     let id = verify(readCookie(req.headers.cookie), config.sessionSecret);
     if (!id) {
       id = newWorkspaceId();
@@ -86,7 +87,12 @@ export function createApp({ paypal, config, events, ledger, invoices, drafter, l
     if (ledger.ensureWorkspace(id)) seedWorkspace(ledger, id);
     req.workspaceId = id;
     next();
-  });
+  }
+  app.get(["/", "/index.html"], workspace);
+
+  const api = express.Router();
+  api.use(express.json({ limit: "10kb" }));
+  api.use(workspace);
 
   api.get("/ledger", (req, res) => {
     res.json({ payments: ledger.payments(req.workspaceId), summary: ledger.summary(req.workspaceId) });

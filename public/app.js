@@ -129,7 +129,18 @@ $("ask").addEventListener("submit", async (e) => {
   await loadInvoices();
 });
 
+// Reset wipes this workspace's payments and invoices, so it needs a second click.
+let resetArmed = null;
 $("reset").addEventListener("click", async () => {
+  const btn = $("reset");
+  if (!resetArmed) {
+    btn.textContent = "Click again to wipe your payments and invoices";
+    btn.classList.add("danger");
+    resetArmed = setTimeout(() => { resetArmed = null; btn.textContent = "Reset my demo"; btn.classList.remove("danger"); }, 5000);
+    return;
+  }
+  clearTimeout(resetArmed); resetArmed = null;
+  btn.textContent = "Reset my demo"; btn.classList.remove("danger");
   await api("/reset", { method: "POST", body: "{}" });
   notice("Your demo is back to the starting month of example income.");
   lastTop = null;
