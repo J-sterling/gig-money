@@ -2,6 +2,8 @@ import { createApp } from "./app.js";
 import { loadConfig, requireCredentials } from "./config.js";
 import { openDb } from "./db.js";
 import { draftInvoice } from "./draft-invoice.js";
+import { draftReminder } from "./draft-reminder.js";
+import { createTagger, tagWithModel } from "./tag-payment.js";
 import { createEventLog } from "./events.js";
 import { createInvoiceBook } from "./invoices.js";
 import { createLedger } from "./ledger.js";
@@ -25,5 +27,12 @@ const drafter = (request) => {
   return draftInvoice(request, { model, cap, timeoutMs: mc.timeoutMs });
 };
 
-const app = createApp({ paypal, config, events: createEventLog(), ledger, invoices, drafter });
+const needModel = () => { if (!model) throw new Error("OPENROUTER_API_KEY is not set"); };
+const reminderDrafter = (invoice) => { needModel(); return draftReminder(invoice, { model, cap, timeoutMs: mc.timeoutMs }); };
+const tag = createTagger({
+  ledger,
+  classify: (payment, categories, examples) => { needModel(); return tagWithModel(payment, categories, { examples, model, cap, timeoutMs: mc.timeoutMs }); },
+});
+
+const app = createApp({ paypal, config, events: createEventLog(), ledger, invoices, drafter, reminderDrafter, tag });
 app.listen(config.port, () => console.log(`Listening on ${config.publicUrl} (PayPal sandbox)`));

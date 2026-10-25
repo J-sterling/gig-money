@@ -3,7 +3,9 @@
 
 export class PayPalError extends Error {
   constructor(status, body, what) {
-    super(`${what} failed: HTTP ${status}${body?.name ? ` ${body.name}` : ""}${body?.message ? ` - ${body.message}` : ""}`);
+    const detail = body?.details?.[0];
+    super(`${what} failed: HTTP ${status}${body?.name ? ` ${body.name}` : ""}${body?.message ? ` - ${body.message}` : ""}` +
+      (detail ? ` (${detail.issue}${detail.description ? `: ${detail.description}` : ""})` : ""));
     this.status = status;
     this.body = body;
   }
@@ -70,6 +72,11 @@ export function createPayPal({ baseUrl, clientId, clientSecret, fetch = globalTh
     sendInvoice: (id) =>
       call("POST", `/v2/invoicing/invoices/${encodeURIComponent(id)}/send`, "Sending the invoice", {
         send_to_invoicer: false, send_to_recipient: false,
+      }),
+    // Logged with PayPal and copied to the invoicer only; the worker sends the text and pay link themselves.
+    remindInvoice: (id, { subject, note }) =>
+      call("POST", `/v2/invoicing/invoices/${encodeURIComponent(id)}/remind`, "Logging the reminder", {
+        subject, note, send_to_invoicer: true, send_to_recipient: false,
       }),
     getInvoice: (id) => call("GET", `/v2/invoicing/invoices/${encodeURIComponent(id)}`, "Reading the invoice"),
     captureOrder: (id) => call("POST", `/v2/checkout/orders/${encodeURIComponent(id)}/capture`, "Capturing the order", {}),

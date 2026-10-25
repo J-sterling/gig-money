@@ -13,6 +13,7 @@ function setup({ failCreate = false } = {}) {
   const paypal = {
     createInvoice: async (a) => { calls.push(["create", a]); if (failCreate) throw new Error("HTTP 403 NOT_AUTHORIZED"); return { id: "INV2-TEST-1" }; },
     sendInvoice: async (id) => { calls.push(["send", id]); return { rel: "payer-view", href: "https://www.sandbox.paypal.com/invoice/p/#INV2-TEST-1" }; },
+    remindInvoice: async (id, r) => { calls.push(["remind", id, r]); return {}; },
     getInvoice: async (id) => { calls.push(["get", id]); return { id, status: "PAID", payments: { paid_amount: { value: "120.00", currency_code: "GBP" }, transactions: [{ payment_id: "PAY-1", payment_date: "2026-11-08" }] } }; },
   };
   const db = openDb(":memory:");
@@ -95,4 +96,40 @@ test("a paid webhook only counts for the invoice's own workspace", async () => {
   assert.equal(book.recordPaidWebhook({ resource: { invoice: { id: "INV2-TEST-1", detail: { reference: OTHER } } } }).recorded, false);
   assert.equal(book.recordPaidWebhook({ resource: { invoice: { id: "INV2-TEST-1", detail: { reference: WS } } } }).recorded, true);
   assert.equal(ledger.payments(WS).length, 1);
+});
+
+test("a reminder is a draft until approved, then PayPal logs it to the invoicer only", async () => {
+  const { book, calls } = setup();
+  const inv = book.create(WS, { draft: { ...draft, client_email: "accounts@northside.example" }, draftedBy: "m" });
+  await book.approve(WS, inv.id);
+  const r = book.addReminder(WS, inv.id, { subject: "Reminder: Saturday shoot", note: "Hi, a friendly reminder. Thanks", draftedBy: "m" });
+  assert.equal(r.reminder_status, "draft");
+  assert.equal(calls.filter((c) => c[0] === "remind").length, 0);
+  const out = await book.approveReminder(WS, inv.id, { note: "Hi, a gentle nudge on the invoice. Thanks" });
+  assert.equal(out.reminder_status, "sent");
+  assert.equal(out.reminder.via, "paypal");
+  const remind = calls.find((c) => c[0] === "remind");
+  assert.equal(remind[1], "INV2-TEST-1");
+  assert.match(remind[2].note, /gentle nudge/);
+  await assert.rejects(book.approveReminder(WS, inv.id), (e) => e.status === 409);
+});
+
+test("no reminders for drafts or paid invoices, and none from another workspace", async () => {
+  const { book } = setup();
+  const inv = book.create(WS, { draft, draftedBy: "m" });
+  assert.throws(() => book.addReminder(WS, inv.id, { subject: "s", note: "n", draftedBy: "m" }), (e) => e.status === 409);
+  await book.approve(WS, inv.id);
+  assert.throws(() => book.addReminder(OTHER, inv.id, { subject: "s", note: "n", draftedBy: "m" }), (e) => e.status === 404);
+  await book.refresh(WS, inv.id); // fake PayPal says PAID
+  assert.throws(() => book.addReminder(WS, inv.id, { subject: "s", note: "n", draftedBy: "m" }), (e) => e.status === 409);
+});
+
+test("without a client email, an approved reminder is for the worker to send; PayPal isn't called", async () => {
+  const { book, calls } = setup();
+  const inv = book.create(WS, { draft, draftedBy: "m" }); // client_email: null
+  await book.approve(WS, inv.id);
+  book.addReminder(WS, inv.id, { subject: "Reminder", note: "Hi, a friendly reminder. Thanks", draftedBy: "m" });
+  const out = await book.approveReminder(WS, inv.id);
+  assert.equal(out.reminder.via, "copy");
+  assert.equal(calls.filter((c) => c[0] === "remind").length, 0);
 });

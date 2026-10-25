@@ -30,12 +30,25 @@ async function loadLedger() {
     const tr = el("tr", {},
       el("td", { className: "date", textContent: day(p.captured_at) }),
       el("td", {}, el("div", { textContent: p.payer || "PayPal payer" }), el("div", { className: "src", textContent: p.note || "" })),
-      el("td", {}, el("div", { textContent: p.source || "Not tagged yet" }), el("div", { className: "src", textContent: via })),
+      sourceCell(p, via),
       el("td", { className: "r", textContent: money(p.amount_pence / 100, p.currency) }));
     if (lastTop && p.id !== lastTop && p.recorded_via !== "seed" && p === payments[0]) tr.className = "new";
     return tr;
   }));
   lastTop = payments[0]?.id ?? null;
+}
+
+function sourceCell(p, via) {
+  const top = el("div");
+  if (!p.source) top.append(el("span", { className: "pending", textContent: "Tagging…" }));
+  else {
+    top.append(p.source);
+    if (p.source_by === "rule") top.append(el("span", { className: "tagby rule", textContent: "rule", title: p.source_reason || "" }));
+    else if (p.source_by && !["seed", "invoice"].includes(p.source_by)) top.append(el("span", { className: "tagby ai", textContent: "AI", title: `${p.source_by}: ${p.source_reason || ""}` }));
+  }
+  const cell = el("td", {}, top, el("div", { className: "src", textContent: via }));
+  if (p.source_reason && p.source_by !== "seed") cell.append(el("div", { className: "src", textContent: p.source_reason }));
+  return cell;
 }
 
 function draftCard(inv) {
@@ -97,9 +110,61 @@ function invoiceRow(inv) {
     meta.append(check);
   }
   if (inv.status === "failed") meta.append(el("span", { textContent: inv.error || "Sending failed." }));
-  return el("div", { className: "inv" },
+  const overdue = inv.status === "sent" && d.due_date < new Date().toISOString().slice(0, 10);
+  if (overdue) meta.append(el("span", { className: "pill failed", textContent: "overdue" }));
+  if (inv.reminder_status === "sent") meta.append(el("span", { textContent: `reminder ${inv.reminder?.via === "paypal" ? "logged with PayPal" : "approved"} ${day(inv.reminded_at)}` }));
+  if (inv.status === "sent" && inv.reminder_status !== "draft") {
+    const remind = el("button", { type: "button", className: "ghost", textContent: "Draft reminder" });
+    remind.addEventListener("click", async () => {
+      remind.disabled = true; remind.textContent = "Drafting…";
+      try { await api(`/invoices/${inv.id}/reminder`, { method: "POST", body: "{}" }); } catch (x) { notice(x.message, true); }
+      await loadInvoices();
+    });
+    meta.append(remind);
+  }
+  const row = el("div", { className: "inv" },
     el("div", {}, el("div", { className: "who", textContent: d.client_name }), el("div", { className: "src", textContent: d.description })),
     el("div", { className: "r", textContent: money(d.amount, d.currency) }), meta);
+  if (inv.reminder_status === "draft") row.append(reminderCard(inv));
+  return row;
+}
+
+// A reminder waits for approval like an invoice draft. Approving logs it with
+// PayPal (copied to you, not the client); you send the text and pay link yourself.
+function reminderCard(inv) {
+  const r = inv.reminder;
+  const subject = el("input", { name: "subject", value: r.subject, maxLength: 120 });
+  const note = el("textarea", { name: "note", rows: 4, maxLength: 600, value: r.note });
+  const err = el("p", { className: "err", hidden: true });
+  const approve = el("button", { type: "submit", textContent: inv.draft.client_email ? "Approve and log with PayPal" : "Approve" });
+  const copy = el("button", { type: "button", className: "ghost", textContent: "Copy text and pay link" });
+  const reject = el("button", { type: "button", className: "danger", textContent: "Reject" });
+  const form = el("form", { className: "draft reminder" },
+    el("div", { className: "head" }, el("span", { textContent: "Reminder · waiting for you" }), el("span", { textContent: `by ${r.drafted_by}` })),
+    el("label", {}, "Subject", subject), el("label", {}, "Message", note), err,
+    el("div", { className: "actions" }, approve, copy, reject));
+  copy.addEventListener("click", async () => {
+    const text = `${note.value}\n\n${inv.pay_url ?? ""}`;
+    try { await navigator.clipboard.writeText(text); copy.textContent = "Copied"; }
+    catch { note.select(); copy.textContent = "Select and copy the message"; }
+  });
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    approve.disabled = reject.disabled = true; err.hidden = true;
+    try {
+      const out = await api(`/invoices/${inv.id}/reminder/approve`, { method: "POST", body: JSON.stringify({ edits: { subject: subject.value, note: note.value } }) });
+      notice(out.reminder?.via === "paypal"
+        ? "Reminder logged with PayPal. Send the copied message and pay link to your client too."
+        : "Reminder approved. This invoice has no client email, so PayPal can't log it: copy the message and pay link and send them yourself.");
+    } catch (x) { err.textContent = x.message; err.hidden = false; }
+    await loadInvoices();
+  });
+  reject.addEventListener("click", async () => {
+    approve.disabled = reject.disabled = true;
+    try { await api(`/invoices/${inv.id}/reminder/reject`, { method: "POST", body: "{}" }); } catch (x) { notice(x.message, true); }
+    await loadInvoices();
+  });
+  return form;
 }
 
 async function loadInvoices() {
@@ -113,7 +178,7 @@ $("getpaid").addEventListener("submit", async (e) => {
   e.preventDefault();
   const btn = e.submitter; btn.disabled = true;
   try {
-    const { approve_url } = await api("/get-paid", { method: "POST", body: JSON.stringify({ amount: Number($("amount").value) }) });
+    const { approve_url } = await api("/get-paid", { method: "POST", body: JSON.stringify({ amount: Number($("amount").value), note: $("note").value }) });
     location.href = approve_url; // PayPal sends the buyer back here when done
   } catch (x) { notice(x.message, true); btn.disabled = false; }
 });
@@ -148,7 +213,10 @@ $("reset").addEventListener("click", async () => {
 });
 
 const q = new URLSearchParams(location.search);
-if (q.get("paid") === "1") notice("Payment received from PayPal and added to your ledger.");
+if (q.get("paid") === "1") {
+  notice("Payment received from PayPal and added to your ledger. The AI is tagging where it came from…");
+  for (const ms of [3000, 8000, 20000]) setTimeout(loadLedger, ms); // tagging finishes in the background
+}
 if (q.get("paid") === "0") notice("PayPal returned, but no new payment was recorded (it may already be in your ledger).", true);
 if (q.get("cancelled")) notice("Payment cancelled on PayPal. Nothing was charged.", true);
 if (q.size) history.replaceState(null, "", "/");

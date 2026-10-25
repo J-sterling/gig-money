@@ -6,7 +6,7 @@ A PayPal money assistant for gig workers. Payments arrive from PayPal by webhook
 
 > Built for the PayPal AI Hackathon 2026. Runs against the **PayPal sandbox only**; no real money moves.
 
-**Status (25 Oct 2026):** a working web app at `/`: a ledger with a separate demo workspace per visitor, "Get paid" through PayPal Orders, AI invoice drafts, and an approval gate. Approved drafts go out through PayPal Invoicing, and paying the invoice adds the income to the ledger. Still to come: AI source tagging, the password gate and the Render deploy.
+**Status (25 Oct 2026):** a working web app at `/`: a ledger with a separate demo workspace per visitor, "Get paid" through PayPal Orders, AI invoice drafts, and an approval gate. Approved drafts go out through PayPal Invoicing, and paying the invoice adds the income to the ledger. New payments are tagged by source by the AI, using your own past payments as examples (keyword rules take over if the model is unavailable), and sent invoices can get an AI-drafted reminder that also waits for approval. Still to come: the password gate and the Render deploy.
 
 ## Run it
 
@@ -39,6 +39,9 @@ Events from the dashboard's Webhooks Simulator are mock events. They fail signat
 2. **Ask for an invoice** in a sentence. The AI drafts it; if the free model is slow or out of calls, a clearly labelled saved example appears instead.
 3. **Approve and send** (edit first if you like). Only then does the server create and send the invoice through PayPal Invoicing. You get a pay link instead of an email to the client.
 4. Open the **pay link**, pay as the sandbox buyer, then **Check payment**: it's marked paid and the income is added to the ledger.
+5. **Draft reminder** on a sent invoice: the AI writes a polite reminder for you to approve. If the invoice has a client email, approving logs it with PayPal (copied to you, not the client); either way you can copy the message and pay link.
+
+Each new payment's **Source** is tagged in the background. An **AI** badge shows the model chose it (hover for its reason); **rule** means the keyword fallback did.
 
 **Reset my demo** puts your workspace back to the starting month of example income.
 

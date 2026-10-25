@@ -3,6 +3,7 @@
 // draft can be approved or rejected once (a failed send can be retried).
 import { randomBytes } from "node:crypto";
 import { InvoiceFields } from "./draft-invoice.js";
+import { ReminderDraft } from "./draft-reminder.js";
 
 export class GateError extends Error {
   constructor(status, message) { super(message); this.status = status; }
@@ -25,8 +26,15 @@ export function createInvoiceBook(db, { paypal, ledger, now = () => new Date() }
   const failed = db.prepare("UPDATE invoices SET status = 'failed', error = ? WHERE id = ?");
   const paid = db.prepare("UPDATE invoices SET status = 'paid', paid_at = ? WHERE id = ? AND status = 'sent'");
   const wipe = db.prepare("DELETE FROM invoices WHERE workspace_id = ?");
+  // Reminders get the same gate: drafted, then approved or rejected once.
+  const setReminder = db.prepare(`UPDATE invoices SET reminder = ?, reminder_status = 'draft'
+    WHERE id = ? AND workspace_id = ? AND status = 'sent' AND (reminder_status IS NULL OR reminder_status != 'draft')`);
+  const claimReminder = db.prepare(`UPDATE invoices SET reminder_status = 'sending', reminder = ?
+    WHERE id = ? AND workspace_id = ? AND status = 'sent' AND reminder_status = 'draft'`);
+  const reminderDone = db.prepare("UPDATE invoices SET reminder_status = ?, reminded_at = ? WHERE id = ?");
+  const reminderBack = db.prepare("UPDATE invoices SET reminder_status = 'draft' WHERE id = ?");
 
-  const view = (row) => row && { ...row, draft: JSON.parse(row.draft) };
+  const view = (row) => row && { ...row, draft: JSON.parse(row.draft), reminder: row.reminder ? JSON.parse(row.reminder) : null };
   const mustGet = (ws, id) => {
     const row = one.get(id, ws);
     if (!row) throw new GateError(404, "No such draft in this demo.");
@@ -105,6 +113,50 @@ export function createInvoiceBook(db, { paypal, ledger, now = () => new Date() }
       }
       return view(one.get(id, ws));
     },
+
+    // Store a reminder draft for a sent invoice (from the model or the saved wording).
+    addReminder(ws, id, { subject, note, draftedBy }) {
+      const row = mustGet(ws, id);
+      const r = ReminderDraft.parse({ subject, note });
+      if (setReminder.run(JSON.stringify({ ...r, drafted_by: draftedBy }), id, ws).changes !== 1) {
+        throw new GateError(409, row.status !== "sent" ? `Only a sent, unpaid invoice can get a reminder; this one is ${row.status}.` : "A reminder draft is already waiting.");
+      }
+      return view(one.get(id, ws));
+    },
+
+    async approveReminder(ws, id, edits = {}) {
+      const row = mustGet(ws, id);
+      const current = row.reminder ? JSON.parse(row.reminder) : null;
+      const check = ReminderDraft.safeParse({ subject: edits.subject ?? current?.subject, note: edits.note ?? current?.note });
+      if (!check.success) throw new GateError(400, "The reminder needs a subject and a note (up to 600 characters).");
+      if (claimReminder.run(JSON.stringify({ ...check.data, drafted_by: current?.drafted_by }), id, ws).changes !== 1) {
+        throw new GateError(409, "There's no reminder draft waiting for this invoice.");
+      }
+      // PayPal can only log a reminder when the invoice has a client email
+      // (CANNOT_REMIND_AS_BILLING_INFO_ABSENT otherwise); without one, the
+      // approved text and pay link are for the worker to send themselves.
+      const via = JSON.parse(row.draft).client_email ? "paypal" : "copy";
+      if (via === "paypal") {
+        try {
+          await paypal.remindInvoice(row.paypal_id, check.data);
+        } catch (err) {
+          reminderBack.run(id);
+          throw new GateError(502, `PayPal didn't log the reminder: ${err.message}`);
+        }
+      }
+      db.prepare("UPDATE invoices SET reminder = ? WHERE id = ?").run(JSON.stringify({ ...check.data, drafted_by: current?.drafted_by, via }), id);
+      reminderDone.run("sent", now().toISOString(), id);
+      return view(one.get(id, ws));
+    },
+
+    rejectReminder(ws, id) {
+      const row = mustGet(ws, id);
+      if (row.reminder_status !== "draft") throw new GateError(409, "There's no reminder draft waiting for this invoice.");
+      reminderDone.run("rejected", null, id);
+      return view(one.get(id, ws));
+    },
+
+    get: (ws, id) => view(mustGet(ws, id)),
 
     reset: (ws) => wipe.run(ws).changes,
   };

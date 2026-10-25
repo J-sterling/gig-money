@@ -1,6 +1,7 @@
 // HTTP routes. Built as a factory so tests can pass a fake PayPal client.
 import { fileURLToPath } from "node:url";
 import express from "express";
+import { savedReminder } from "./draft-reminder.js";
 import { GateError } from "./invoices.js";
 import { savedDraft, whyNoModel } from "./saved-draft.js";
 import { seedWorkspace } from "./seed.js";
@@ -9,9 +10,12 @@ import { COOKIE, newWorkspaceId, readCookie, sign, verify } from "./workspaces.j
 const PUBLIC_DIR = fileURLToPath(new URL("../public", import.meta.url));
 
 // drafter(request) -> { draft, modelId }; throws when the model is unavailable.
-export function createApp({ paypal, config, events, ledger, invoices, drafter, log = console }) {
+// tag(workspaceId, paymentId) tags a new payment's source in the background.
+export function createApp({ paypal, config, events, ledger, invoices, drafter, reminderDrafter, tag = async () => {}, log = console }) {
   const app = express();
   app.disable("x-powered-by");
+  // Tagging runs after the response so PayPal and the page never wait for the model.
+  const tagLater = (r) => { if (r?.recorded) tag(r.workspaceId, r.id).catch((err) => log.warn(`Tagging failed: ${err.message}`)); };
 
   app.get("/health", (_req, res) => res.json({ ok: true, env: "sandbox" }));
 
@@ -47,6 +51,7 @@ export function createApp({ paypal, config, events, ledger, invoices, drafter, l
     // Only verified events may change the ledger (N3).
     let result = { recorded: false, reason: "not verified" };
     if (verified) result = event.event_type === "INVOICING.INVOICE.PAID" ? invoices.recordPaidWebhook(event) : ledger.recordWebhook(event);
+    tagLater(result);
     log.info(`Webhook ${event.event_type} ${event.id} ${verified ? "verified" : "NOT verified (logged only)"}; ledger: ${result.recorded ? "recorded" : result.reason}`);
     // 200 either way so PayPal stops retrying.
     res.json({ received: true, verified });
@@ -63,6 +68,7 @@ export function createApp({ paypal, config, events, ledger, invoices, drafter, l
     try {
       const order = await paypal.captureOrder(id);
       const result = ledger.recordCapture(order);
+      tagLater(result);
       log.info(`Order ${order.id} ${order.status}; ledger: ${result.recorded ? "payment recorded" : result.reason}`);
       res.redirect(303, `/?paid=${result.recorded ? "1" : "0"}`);
     } catch (err) {
@@ -102,9 +108,10 @@ export function createApp({ paypal, config, events, ledger, invoices, drafter, l
   api.post("/get-paid", async (req, res) => {
     const value = Number(req.body?.amount ?? 25);
     if (!(value >= 1 && value <= 500)) return res.status(400).json({ error: "Amount must be between £1 and £500." });
+    const note = String(req.body?.note ?? "").trim().slice(0, 120) || "Gig Money demo payment";
     try {
       const order = await paypal.createOrder({
-        value: value.toFixed(2), customId: req.workspaceId, description: "Gig Money demo payment",
+        value: value.toFixed(2), customId: req.workspaceId, description: note,
         returnUrl: `${config.publicUrl}/return`, cancelUrl: `${config.publicUrl}/cancel`,
       });
       const link = order.links.find((l) => l.rel === "payer-action" || l.rel === "approve");
@@ -148,6 +155,23 @@ export function createApp({ paypal, config, events, ledger, invoices, drafter, l
   api.post("/drafts/:id/approve", gate((req) => invoices.approve(req.workspaceId, req.params.id, req.body?.edits ?? {})));
   api.post("/drafts/:id/reject", gate((req) => invoices.reject(req.workspaceId, req.params.id, req.body?.note)));
   api.post("/invoices/:id/refresh", gate((req) => invoices.refresh(req.workspaceId, req.params.id)));
+
+  // Reminder for a sent invoice: drafted (model, or saved wording), then approved or rejected.
+  api.post("/invoices/:id/reminder", gate(async (req) => {
+    const inv = invoices.get(req.workspaceId, req.params.id);
+    if (inv.status !== "sent") throw new GateError(409, `Only a sent, unpaid invoice can get a reminder; this one is ${inv.status}.`);
+    let made;
+    try {
+      const { reminder, modelId } = await reminderDrafter(inv);
+      made = { ...reminder, draftedBy: modelId ?? "model" };
+    } catch (err) {
+      log.warn(`Reminder fell back to the saved wording: ${err.message}`);
+      made = { ...savedReminder(inv), draftedBy: `saved wording (${whyNoModel(err)})` };
+    }
+    return invoices.addReminder(req.workspaceId, req.params.id, made);
+  }));
+  api.post("/invoices/:id/reminder/approve", gate((req) => invoices.approveReminder(req.workspaceId, req.params.id, req.body?.edits ?? {})));
+  api.post("/invoices/:id/reminder/reject", gate((req) => invoices.rejectReminder(req.workspaceId, req.params.id)));
 
   api.post("/reset", (req, res) => {
     ledger.reset(req.workspaceId);

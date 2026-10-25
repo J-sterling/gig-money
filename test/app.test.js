@@ -11,6 +11,8 @@ import { createLedger } from "../src/ledger.js";
 
 const quiet = { info() {}, warn() {}, error() {} };
 let server, base, verifyResult, lastOrder, drafterMode = "ok";
+const tagged = [];
+let invoiceSeq = 0;
 
 // Fake PayPal: remembers the last order's custom_id so capture can echo it back.
 const paypal = {
@@ -21,9 +23,10 @@ const paypal = {
     purchase_units: [{ payments: { captures: [{ id: "CAP-9", status: "COMPLETED", custom_id: lastOrder?.customId,
       amount: { value: "25.00", currency_code: "GBP" }, create_time: new Date().toISOString() }] } }],
   }),
-  createInvoice: async () => ({ id: "INV2-APP-1" }),
-  sendInvoice: async () => ({ href: "https://www.sandbox.paypal.com/invoice/p/#INV2-APP-1" }),
+  createInvoice: async () => ({ id: `INV2-APP-${++invoiceSeq}` }), // unique, like PayPal's
+  sendInvoice: async (id) => ({ href: `https://www.sandbox.paypal.com/invoice/p/#${id}` }),
   getInvoice: async (id) => ({ id, status: "SENT" }),
+  remindInvoice: async () => ({}),
 };
 const due = new Date(Date.now() + 14 * 864e5).toISOString().slice(0, 10);
 const drafter = async () => {
@@ -37,7 +40,9 @@ before(async () => {
   const ledger = createLedger(db);
   const invoices = createInvoiceBook(db, { paypal, ledger });
   const config = { webhookId: "WID", sessionSecret: "test-secret", publicUrl: "http://localhost" };
-  const app = createApp({ paypal, config, events, ledger, invoices, drafter, log: quiet });
+  const reminderDrafter = async () => { throw new Error("Daily model limit reached"); };
+  const tag = async (ws, id) => { tagged.push([ws, id]); };
+  const app = createApp({ paypal, config, events, ledger, invoices, drafter, reminderDrafter, tag, log: quiet });
   await new Promise((r) => (server = app.listen(0, r)));
   base = `http://localhost:${server.address().port}`;
 });
@@ -90,6 +95,8 @@ test("get paid, approve, return: the payment lands in that visitor's ledger only
   const lb = await (await api(b.cookie, "/ledger")).json();
   assert.equal(la.payments.length, 11);
   assert.equal(la.payments[0].id, "CAP-9");
+  assert.equal(lastOrder.description, "Gig Money demo payment");
+  assert.ok(tagged.some(([, id]) => id === "CAP-9")); // tagging is queued for the new payment
   assert.equal(lb.payments.length, 10);
 });
 
@@ -150,4 +157,17 @@ test("loading the page sets the workspace cookie, so its data requests share one
   const [l, i] = await Promise.all([api(cookie, "/ledger"), api(cookie, "/invoices")]);
   assert.equal(l.headers.get("set-cookie"), null);
   assert.equal(i.headers.get("set-cookie"), null);
+});
+
+test("a reminder for a sent invoice falls back to saved wording, then goes through approval", async () => {
+  drafterMode = "ok";
+  const a = await visitor();
+  const d = await (await api(a.cookie, "/drafts", { method: "POST", body: JSON.stringify({ request: "bill Brightside Yoga £95" }) })).json();
+  await api(a.cookie, `/drafts/${d.id}/approve`, { method: "POST", body: "{}" });
+  const r = await (await api(a.cookie, `/invoices/${d.id}/reminder`, { method: "POST", body: "{}" })).json();
+  assert.equal(r.reminder_status, "draft");
+  assert.match(r.reminder.drafted_by, /saved wording/);
+  assert.match(r.reminder.note, /Brightside Yoga/);
+  const sent = await (await api(a.cookie, `/invoices/${d.id}/reminder/approve`, { method: "POST", body: "{}" })).json();
+  assert.equal(sent.reminder_status, "sent");
 });

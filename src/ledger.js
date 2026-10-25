@@ -13,12 +13,17 @@ export function createLedger(db, { setAsideRate = 0.25, now = () => new Date() }
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`);
   const list = db.prepare("SELECT * FROM payments WHERE workspace_id = ? ORDER BY captured_at DESC");
   const wipe = db.prepare("DELETE FROM payments WHERE workspace_id = ?");
+  const oneById = db.prepare("SELECT * FROM payments WHERE id = ? AND workspace_id = ?");
+  const tag = db.prepare("UPDATE payments SET source = ?, source_by = ?, source_reason = ? WHERE id = ? AND workspace_id = ? AND source IS NULL");
+  const sources = db.prepare("SELECT DISTINCT source FROM payments WHERE workspace_id = ? AND source IS NOT NULL ORDER BY source");
+  const examples = db.prepare(`SELECT source, payer, note FROM payments WHERE workspace_id = ? AND source IS NOT NULL
+    AND note IS NOT NULL ORDER BY captured_at DESC`);
 
   function add(workspaceId, p) {
     if (!isWorkspaceId(workspaceId) || !hasWs.get(workspaceId)) return { recorded: false, reason: "unknown workspace" };
     const r = insertPay.run(p.id, workspaceId, p.order_id ?? null, p.amount_pence, p.currency, p.payer ?? null, p.note ?? null,
       p.source ?? null, p.source_by ?? null, p.captured_at, p.recorded_via);
-    return { recorded: r.changes === 1, reason: r.changes === 1 ? null : "already recorded" };
+    return { recorded: r.changes === 1, reason: r.changes === 1 ? null : "already recorded", workspaceId, id: p.id };
   }
 
   return {
@@ -71,5 +76,16 @@ export function createLedger(db, { setAsideRate = 0.25, now = () => new Date() }
     },
 
     reset: (workspaceId) => wipe.run(workspaceId).changes,
+
+    payment: (workspaceId, id) => oneById.get(id, workspaceId),
+    // Tags an untagged payment; never overwrites an existing tag.
+    setSource: (workspaceId, id, { source, by, reason }) => tag.run(source, by, reason ?? null, id, workspaceId).changes === 1,
+    sources: (workspaceId) => sources.all(workspaceId).map((r) => r.source),
+    // Up to n recent tagged payments per category, so the tagger can learn what each means.
+    examples(workspaceId, n = 2) {
+      const out = {};
+      for (const r of examples.all(workspaceId)) (out[r.source] ??= []).length < n && out[r.source].push(`${r.payer}: ${r.note}`);
+      return out;
+    },
   };
 }

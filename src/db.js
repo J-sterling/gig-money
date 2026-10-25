@@ -48,5 +48,15 @@ export function openDb(path = "var/gig-money.db") {
     );
     CREATE INDEX IF NOT EXISTS invoices_ws ON invoices(workspace_id, created_at);
   `);
+  // Columns added after the first release; existing databases get them here.
+  addColumn(db, "payments", "source_reason", "TEXT");
+  addColumn(db, "invoices", "reminder", "TEXT");          // JSON {subject, note, drafted_by}
+  addColumn(db, "invoices", "reminder_status", "TEXT");   // draft, sent, rejected
+  addColumn(db, "invoices", "reminded_at", "TEXT");
   return db;
+}
+
+function addColumn(db, table, column, type) {
+  const has = db.prepare(`PRAGMA table_info(${table})`).all().some((c) => c.name === column);
+  if (!has) db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${type}`);
 }

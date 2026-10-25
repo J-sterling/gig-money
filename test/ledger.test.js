@@ -33,7 +33,9 @@ test("a capture reply is recorded in pence with the payer", () => {
 test("the capture reply and its webhook record the payment once", () => {
   const l = setup();
   l.recordCapture(captured("ws_00000000000000aa"));
-  assert.deepEqual(l.recordWebhook(webhook("ws_00000000000000aa")), { recorded: false, reason: "already recorded" });
+  const again = l.recordWebhook(webhook("ws_00000000000000aa"));
+  assert.equal(again.recorded, false);
+  assert.equal(again.reason, "already recorded");
   assert.equal(l.payments("ws_00000000000000aa").length, 1);
 });
 
