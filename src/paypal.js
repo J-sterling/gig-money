@@ -46,6 +46,7 @@ export function createPayPal({ baseUrl, clientId, clientSecret, fetch = globalTh
   return {
     getToken,
     listWebhooks: () => call("GET", "/v1/notifications/webhooks", "Listing webhooks"),
+    deleteWebhook: (id) => call("DELETE", `/v1/notifications/webhooks/${encodeURIComponent(id)}`, "Removing the webhook"),
     createWebhook: (url, eventTypes) =>
       call("POST", "/v1/notifications/webhooks", "Registering the webhook", {
         url,

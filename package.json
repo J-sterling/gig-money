@@ -13,7 +13,8 @@
     "test": "node --test",
     "check": "node scripts/check-credentials.js",
     "webhook:register": "node scripts/register-webhook.js",
-    "order:create": "node scripts/create-order.js"
+    "order:create": "node scripts/create-order.js",
+    "webhook:remove": "node scripts/remove-webhook.js"
   },
   "dependencies": {
     "dotenv": "^18.0.9",

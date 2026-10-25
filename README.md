@@ -22,7 +22,7 @@ Needs Node 22 or newer and a free PayPal developer account.
    npm start
    npm run webhook:register -- https://<your-public-url>
    ```
-   Restart `npm start` so it picks up `PAYPAL_WEBHOOK_ID`.
+   Restart `npm start` so it picks up `PAYPAL_WEBHOOK_ID`. Re-running the command with the same URL reuses the existing webhook. To undo it, run `npm run webhook:remove`, which deletes the webhook at PayPal and clears the ID in `.env`.
 4. **Make a test payment.** `npm run order:create` prints a PayPal link. Approve it as the sandbox **personal** account; you're sent back to `/return`, which captures the order. Open `/events`: `PAYMENT.CAPTURE.COMPLETED` should be listed with `"verified": true`.
 
 Events from the dashboard's Webhooks Simulator are mock events. They fail signature verification, so they're logged with `"verified": false` and never reach the ledger.
