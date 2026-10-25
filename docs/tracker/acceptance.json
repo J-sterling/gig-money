@@ -210,9 +210,9 @@
   "id": "S3",
   "group": "Submission",
   "item": "Public repo with all source, assets and instructions",
-  "status": "Not started",
-  "detail": "GitHub, public. Seed data and sandbox setup must be in the repo.",
-  "next": "Create with gh after you agree.",
+  "status": "Done",
+  "detail": "Public at github.com/J-sterling/gig-money since 25 Oct; history scanned with gitleaks before the first push.",
+  "next": "Keep README run steps current.",
   "order": 15,
   "owner": "Claude",
   "effort": "30 min",
@@ -222,9 +222,9 @@
   "id": "S4",
   "group": "Submission",
   "item": "Open-source licence visible in About",
-  "status": "Partly done",
-  "detail": "Apache 2.0 LICENSE in the repo (local, not pushed yet).",
-  "next": "Check About shows it after the first push.",
+  "status": "Done",
+  "detail": "GitHub detects Apache-2.0 for the repo (shown in About).",
+  "next": "",
   "order": 16,
   "owner": "Claude",
   "effort": "5 min",
@@ -390,9 +390,9 @@
   "id": "N1",
   "group": "Non-functional",
   "item": "No secrets in the repo",
-  "status": "Partly done",
-  "detail": "Gitleaks hook installed and CI scan written; custom rules for PayPal client ID and secret catch a fake secret.",
-  "next": "Turn on push protection once the GitHub repo exists."
+  "status": "Done",
+  "detail": "Gitleaks pre-commit hook and full-history CI scan with PayPal and OpenRouter rules; GitHub secret scanning and push protection on (25 Oct).",
+  "next": ""
  },
  {
   "id": "N2",
@@ -486,16 +486,16 @@
   "id": "N13",
   "group": "Non-functional",
   "item": "Tests on every push",
-  "status": "Partly done",
-  "detail": "11 offline node:test tests pass; CI runs them on Node 22 and 25.",
-  "next": "CI runs once the repo is pushed."
+  "status": "Done",
+  "detail": "CI runs the 46 offline tests on Node 22 and 25 plus a secret scan on every push; first run passed 25 Oct.",
+  "next": ""
  },
  {
   "id": "N14",
   "group": "Non-functional",
   "item": "Every component's licence reviewed",
   "status": "Not started",
-  "detail": "Software assets tab kept up to date; Apache-2.0 LICENSE detected in About; AG Grid Community only.",
+  "detail": "Software assets tab up to date; Apache-2.0 detected by GitHub; AG Grid Community only; Dependabot alerts and security updates on.",
   "next": "Update the register when dependencies change."
  },
  {

@@ -1,5 +1,7 @@
 # Gig Money
 
+[![CI](https://github.com/J-sterling/gig-money/actions/workflows/ci.yml/badge.svg)](https://github.com/J-sterling/gig-money/actions/workflows/ci.yml)
+
 A PayPal money assistant for gig workers. Payments arrive from PayPal by webhook and go into a ledger. The AI tags where each one came from, keeps a tax set-aside estimate, and drafts invoices and reminders. Nothing goes to a client until you approve it.
 
 > Built for the PayPal AI Hackathon 2026. Runs against the **PayPal sandbox only**; no real money moves.
