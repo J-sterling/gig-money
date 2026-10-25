@@ -1,0 +1,43 @@
+# Render Blueprint: New -> Blueprint -> this repo. Secrets marked sync: false
+# are typed into Render when the Blueprint is created; none live in this file.
+services:
+  - type: web
+    name: gig-money
+    runtime: node
+    plan: starter            # always on; suspend between test sessions with scripts/render.sh
+    region: frankfurt
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /health
+    autoDeployTrigger: commit
+    disk:
+      name: data
+      mountPath: /var/data   # SQLite ledger, event log and model usage survive deploys
+      sizeGB: 1
+    envVars:
+      - key: NODE_VERSION
+        value: "24"
+      - key: PAYPAL_ENV
+        value: sandbox
+      - key: DATA_DIR
+        value: /var/data
+      - key: MODEL
+        value: nvidia/nemotron-3.5-super-vl:free,google/gemma-4-31b-it:free
+      - key: MODEL_DAILY_LIMIT
+        value: "40"
+      - key: MODEL_TIMEOUT_MS
+        value: "20000"
+      - key: MODEL_REASONING
+        value: none
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: PAYPAL_CLIENT_ID
+        sync: false
+      - key: PAYPAL_CLIENT_SECRET
+        sync: false
+      - key: PAYPAL_WEBHOOK_ID
+        sync: false
+      - key: OPENROUTER_API_KEY
+        sync: false
+      - key: DEMO_PASSWORD
+        sync: false

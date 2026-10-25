@@ -22,6 +22,17 @@ id = "openrouter-api-key"
 description = "OpenRouter API key"
 regex = '''\bsk-or-v1-[a-f0-9]{32,}'''
 
+# Render API keys start with "rnd_".
+[[rules]]
+id = "render-api-key"
+description = "Render API key"
+regex = '''\brnd_[A-Za-z0-9]{24,}'''
+
+[[rules]]
+id = "demo-password-assignment"
+description = "A value assigned to DEMO_PASSWORD"
+regex = '''DEMO_PASSWORD\s*[=:]\s*['"]?[^\s'"#$.]{6,}'''
+
 [allowlist]
 description = "Documented placeholders and test fixtures"
 paths = ['''\.env\.example$''']

@@ -2,7 +2,9 @@
 import { fileURLToPath } from "node:url";
 import express from "express";
 import { savedReminder } from "./draft-reminder.js";
+import { passwordGate } from "./auth.js";
 import { GateError } from "./invoices.js";
+import { rateLimit } from "./limits.js";
 import { savedDraft, whyNoModel } from "./saved-draft.js";
 import { seedWorkspace } from "./seed.js";
 import { COOKIE, newWorkspaceId, readCookie, sign, verify } from "./workspaces.js";
@@ -14,6 +16,8 @@ const PUBLIC_DIR = fileURLToPath(new URL("../public", import.meta.url));
 export function createApp({ paypal, config, events, ledger, invoices, drafter, reminderDrafter, tag = async () => {}, log = console }) {
   const app = express();
   app.disable("x-powered-by");
+  app.set("trust proxy", 1); // Render terminates TLS in front of the app; use the client's IP for limits
+  app.use(passwordGate(config.demoPassword ?? ""));
   // Tagging runs after the response so PayPal and the page never wait for the model.
   const tagLater = (r) => { if (r?.recorded) tag(r.workspaceId, r.id).catch((err) => log.warn(`Tagging failed: ${err.message}`)); };
 
@@ -21,7 +25,7 @@ export function createApp({ paypal, config, events, ledger, invoices, drafter, r
 
   // PayPal needs the exact bytes it sent to verify the signature, so this
   // route reads the raw body.
-  app.post("/webhooks/paypal", express.raw({ type: "*/*", limit: "1mb" }), async (req, res) => {
+  app.post("/webhooks/paypal", rateLimit({ perMinute: 60 }), express.raw({ type: "*/*", limit: "1mb" }), async (req, res) => {
     const rawBody = req.body.toString("utf8");
     let event;
     try {
@@ -97,7 +101,10 @@ export function createApp({ paypal, config, events, ledger, invoices, drafter, r
   app.get(["/", "/index.html"], workspace);
 
   const api = express.Router();
+  api.use(rateLimit({ perMinute: 120 }));
   api.use(express.json({ limit: "10kb" }));
+  // Each of these may call the free model, which allows about 50 calls a day in total.
+  const modelLimit = rateLimit({ perMinute: 10, message: "That's a lot of drafts in a minute. Wait a moment and try again." });
   api.use(workspace);
 
   api.get("/ledger", (req, res) => {
@@ -125,7 +132,7 @@ export function createApp({ paypal, config, events, ledger, invoices, drafter, r
   // ---- Invoices: draft, then approve or reject (the gate is in invoices.js) ----
   api.get("/invoices", (req, res) => res.json(invoices.list(req.workspaceId)));
 
-  api.post("/drafts", async (req, res) => {
+  api.post("/drafts", modelLimit, async (req, res) => {
     const request = String(req.body?.request ?? "").trim();
     if (!request) return res.status(400).json({ error: "Describe the invoice, e.g. \"invoice Northside Café £120 for Saturday's shoot, due in 14 days\"." });
     if (request.length > 500) return res.status(400).json({ error: "Keep the request under 500 characters." });
@@ -157,7 +164,7 @@ export function createApp({ paypal, config, events, ledger, invoices, drafter, r
   api.post("/invoices/:id/refresh", gate((req) => invoices.refresh(req.workspaceId, req.params.id)));
 
   // Reminder for a sent invoice: drafted (model, or saved wording), then approved or rejected.
-  api.post("/invoices/:id/reminder", gate(async (req) => {
+  api.post("/invoices/:id/reminder", modelLimit, gate(async (req) => {
     const inv = invoices.get(req.workspaceId, req.params.id);
     if (inv.status !== "sent") throw new GateError(409, `Only a sent, unpaid invoice can get a reminder; this one is ${inv.status}.`);
     let made;

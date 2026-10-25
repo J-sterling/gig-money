@@ -8,6 +8,19 @@ A PayPal money assistant for gig workers. Payments arrive from PayPal by webhook
 
 **Status (25 Oct 2026):** a working web app at `/`: a ledger with a separate demo workspace per visitor, "Get paid" through PayPal Orders, AI invoice drafts, and an approval gate. Approved drafts go out through PayPal Invoicing, and paying the invoice adds the income to the ledger. New payments are tagged by source by the AI, using your own past payments as examples (keyword rules take over if the model is unavailable), and sent invoices can get an AI-drafted reminder that also waits for approval. Still to come: the password gate and the Render deploy.
 
+## For judges
+
+**Hosted demo:** the URL and password are in the Devpost testing instructions (any username works). Everything runs in the PayPal **sandbox**: no real money moves.
+
+1. You get your own demo workspace with a month of example income. Other visitors never see it.
+2. **Get paid:** approve the sandbox payment on PayPal with the sandbox buyer login from the testing instructions. It lands in your ledger, and the AI tags where it came from.
+3. **Ask for an invoice** in a sentence, for example "invoice Northside Café £120 for Saturday's shoot, due in 14 days". The AI drafts it.
+4. **Approve and send:** only now does PayPal Invoicing create and send it. You get a pay link.
+5. Open the **pay link**, pay as the sandbox buyer, then **Check payment**: it's marked paid and added to the ledger.
+6. **Draft reminder** on a sent invoice, then approve it. **Reset my demo** starts you over.
+
+Known limits: the tax figure is an estimate, not tax advice. The AI runs on a free model: if it's slow (over 20 s) or out of daily calls, you'll see a clearly labelled saved example instead, which you can still approve.
+
 ## Run it
 
 Needs Node 22.13 or newer (for the built-in SQLite) and a free PayPal developer account. Data is kept in `var/gig-money.db`.
@@ -54,6 +67,16 @@ The AI runs on [OpenRouter](https://openrouter.ai)'s free tier, so it runs on Op
 3. `npm run draft -- "invoice Northside Café £120 for Saturday's shoot, due in 14 days"` prints a draft. **Nothing is sent**: drafts only go to PayPal after you approve them.
 
 Free models have daily limits, and the app adds its own cap (`MODEL_DAILY_LIMIT`, default 40 calls a day). Free endpoints also queue: on 25 Oct one draft took 1.4 s and another 60 s. The app gives up after `MODEL_TIMEOUT_MS` (20 s) and reasoning is off (`MODEL_REASONING=none`), which is enough for drafting. Free endpoints may log prompts, so use only made-up data.
+
+## Deploy (Render)
+
+`render.yaml` is a Render Blueprint: **New → Blueprint**, pick this repo, and type the secrets when asked. They're marked `sync: false`, so none are in the repo. It runs one Starter web service with a 1 GB disk at `/var/data` (`DATA_DIR`) for the SQLite ledger and event log. Then:
+
+1. `npm run webhook:register -- https://<your-service>.onrender.com`, put the ID in Render as `PAYPAL_WEBHOOK_ID`, and redeploy.
+2. `scripts/render.sh suspend|resume|status|deploy` stops and starts it (needs `RENDER_API_KEY`). A suspended service isn't billed for compute, and its disk keeps the data.
+3. `.github/workflows/health.yml` checks the demo daily from 11 Nov to 15 Dec. It needs repo variable `DEMO_URL` and repo secret `DEMO_PASSWORD`.
+
+With `DEMO_PASSWORD` set, every page needs it except `/health` and `/webhooks/paypal`. PayPal can't send a password, and that route only trusts events whose signature PayPal confirms.
 
 ## Development
 

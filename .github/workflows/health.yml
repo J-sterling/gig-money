@@ -1,0 +1,50 @@
+# Daily check that the judges' demo is up, from submission (11 Nov) until judging ends (15 Dec).
+# Needs repo variable DEMO_URL and repo secret DEMO_PASSWORD. A failed run emails the repo owner.
+name: Demo health
+
+on:
+  schedule:
+    - cron: "17 7 * * *"   # 07:17 UTC daily
+  workflow_dispatch:
+    inputs:
+      force:
+        description: "Run even outside 11 Nov - 15 Dec"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    env:
+      DEMO_URL: ${{ vars.DEMO_URL }}
+      DEMO_PASSWORD: ${{ secrets.DEMO_PASSWORD }}
+    steps:
+      - name: Only during the demo window
+        id: window
+        run: |
+          today=$(date -u +%F)
+          if [ "${{ inputs.force }}" = "true" ] || { [[ "$today" > "2026-11-10" ]] && [[ "$today" < "2026-12-16" ]]; }; then
+            echo "run=yes" >> "$GITHUB_OUTPUT"
+          else
+            echo "Outside 11 Nov - 15 Dec ($today); nothing to check."
+          fi
+      - name: Health, password and a weekly model call
+        if: steps.window.outputs.run == 'yes'
+        run: |
+          set -euo pipefail
+          : "${DEMO_URL:?Set the DEMO_URL repo variable}"
+          curl -sSf "$DEMO_URL/health" | grep -q '"ok":true'
+          test "$(curl -s -o /dev/null -w '%{http_code}' "$DEMO_URL/api/ledger")" = 401   # password enforced
+          curl -sSf -u "health:$DEMO_PASSWORD" "$DEMO_URL/api/ledger" | grep -q '"summary"'
+          if [ "$(date -u +%u)" = 1 ] || [ "${{ inputs.force }}" = "true" ]; then   # Mondays: one real draft
+            out=$(curl -sSf -u "health:$DEMO_PASSWORD" -H 'Content-Type: application/json' \
+              -d '{"request":"invoice Health Check Ltd £1 for a test, due in 7 days"}' "$DEMO_URL/api/drafts")
+            echo "$out" | grep -q '"status":"draft"'
+            if echo "$out" | grep -q '"drafted_by":"saved example"'; then
+              echo "::warning::The free model didn't answer; judges would see the saved example draft."
+            fi
+          fi
+          echo "Demo healthy."
