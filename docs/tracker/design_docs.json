@@ -1,0 +1,4 @@
+[
+ {"id": "journey", "title": "Gig Money Journey", "url": "https://claude.ai/artifact/47REUFrWrDnT1cdUZ5Fzzk", "covers": "Who it's for, the seven stages from getting paid to month end, what PayPal and the assistant do at each, the approval gate, money and invoice flows.", "source": "docs/user-journey.html", "updated": "2026-10-25"},
+ {"id": "architecture", "title": "Gig Money Architecture", "url": "https://claude.ai/artifact/D85UXFrtZDbF9gs2bDy41H", "covers": "How the PayPal sandbox, the Express app, the free model on OpenRouter and local storage connect; what is built versus planned; the non-functional requirements that shape the design.", "source": "docs/architecture.html", "updated": "2026-10-25"}
+]

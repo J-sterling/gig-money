@@ -1,0 +1,526 @@
+<style>
+.at { font-family: var(--font-anthropic-sans); display: grid; gap: var(--cds-gap-lg); }
+.at-head h1 { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: var(--cds-font-size-title); margin: 0; }
+.at-head p { margin: var(--cds-gap-xs) 0 0; color: var(--color-fg-muted); font-size: var(--cds-font-size-body); }
+.at-head p b { color: var(--color-fg); font-weight: 600; }
+.at-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr)); gap: var(--cds-gap-md); }
+.at-tile { background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-lg); display: grid; gap: var(--cds-gap-xs); }
+.at-tile .lab { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+.at-tile .num { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: var(--cds-font-size-title); font-variant-numeric: tabular-nums; line-height: 1.1; }
+.at-tile.ok .num { color: var(--color-ok); }
+.at-tile.warn .num { color: var(--color-warn); }
+.at-tile.bad .num { color: var(--color-bad); }
+.at-bar { height: 8px; border-radius: 4px; background: var(--cds-chart-grid); overflow: hidden; display: flex; }
+.at-bar span { height: 100%; }
+.at-card { background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-lg); display: grid; gap: var(--cds-gap-sm); min-width: 0; }
+.at-card h2 { margin: 0; font-size: var(--cds-font-size-heading); font-weight: var(--cds-font-weight-medium); }
+.at-card .note { margin: 0; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+.at-filter { display: flex; flex-wrap: wrap; gap: var(--cds-gap-xs); }
+.at-filter button { font: inherit; font-size: var(--cds-font-size-caption); padding: var(--cds-pad-xs) var(--cds-pad-sm); border-radius: 999px; border: 1px solid var(--color-border-line); background: var(--color-bg); color: var(--color-fg); cursor: pointer; }
+.at-filter button[aria-pressed="true"] { background: var(--color-fg); color: var(--color-bg); border-color: var(--color-fg); }
+.at-scroll { overflow-x: auto; }
+.at table { width: 100%; border-collapse: collapse; font-size: var(--cds-font-size-body); }
+.at th { text-align: left; font-size: var(--cds-font-size-caption); font-weight: var(--cds-font-weight-medium); color: var(--color-fg-muted); padding: var(--cds-pad-xs) var(--cds-pad-sm); border-bottom: 1px solid var(--color-border-line); }
+.at td { padding: var(--cds-pad-sm); border-bottom: 1px solid var(--color-border-line); vertical-align: top; }
+.at tr:last-child td { border-bottom: 0; }
+.at td.item { font-weight: 600; min-width: 12rem; }
+.at td.muted { color: var(--color-fg-muted); }
+.at .pill { display: inline-block; white-space: nowrap; font-size: var(--cds-font-size-caption); font-weight: 600; padding: 1px var(--cds-pad-sm); border-radius: 999px; border: 1px solid currentColor; }
+.at .pill.Done { color: var(--color-ok); }
+.at .pill.Partly { color: var(--color-warn); }
+.at .pill.Not { color: var(--color-bad); }
+.at .hide-narrow { }
+@media (max-width: 640px) { .at .hide-narrow { display: none; } }
+.at-tabs { display: flex; gap: var(--cds-gap-xs); border-bottom: 1px solid var(--color-border-line); }
+.at-tabs button { font: inherit; font-size: var(--cds-font-size-body); background: none; border: 0; border-bottom: 2px solid transparent; padding: var(--cds-pad-sm) var(--cds-pad-md); color: var(--color-fg-muted); cursor: pointer; margin-bottom: -1px; }
+.at-tabs button[aria-selected="true"] { color: var(--color-fg); border-bottom-color: var(--color-fg); font-weight: 600; }
+.at-search { font: inherit; font-size: var(--cds-font-size-caption); padding: var(--cds-pad-xs) var(--cds-pad-sm); border-radius: var(--cds-radius); border: 1px solid var(--color-border-line); background: var(--color-bg); color: var(--color-fg); min-width: 12rem; }
+.at-scroll.tall { max-height: 34rem; overflow: auto; }
+.at-scroll.tall th { position: sticky; top: 0; background: var(--color-panel); }
+.at .pill.Approved { color: var(--color-ok); }
+.at .pill.Needs { color: var(--color-bad); }
+.at .pill.cond { color: var(--color-warn); }
+.at td.mono { font-variant-numeric: tabular-nums; white-space: nowrap; }
+[data-dash-source-state=refreshing] { opacity: .5; transition: opacity var(--cds-dur-slow); }
+.at .empty-row { color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); }
+.bl-chart { position: relative; }
+.bl-chart svg text { font-family: var(--font-anthropic-sans); font-size: 12px; fill: var(--color-fg-muted); }
+.bl-tip { position: absolute; pointer-events: none; background: var(--color-bg); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-xs) var(--cds-pad-sm); font-size: var(--cds-font-size-caption); white-space: nowrap; display: none; }
+.bl-legend { display: flex; flex-wrap: wrap; gap: var(--cds-gap-md); font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+.bl-legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 4px; vertical-align: -1px; }
+.at td.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.at th.num { text-align: right; }
+.at-left td.own { white-space: nowrap; }
+.dz-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr)); gap: var(--cds-gap-md); }
+.dz-card { background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-lg); display: grid; gap: var(--cds-gap-sm); align-content: start; min-width: 0; }
+.dz-card h2 { margin: 0; font-size: var(--cds-font-size-heading); font-weight: var(--cds-font-weight-medium); }
+.dz-card p { margin: 0; color: var(--color-fg-muted); font-size: var(--cds-font-size-body); }
+.dz-card .meta { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+.dz-card a.open { justify-self: start; font-size: var(--cds-font-size-body); font-weight: 600; color: var(--color-fg); text-decoration: none; border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-xs) var(--cds-pad-md); }
+.dz-card a.open:hover, .dz-card a.open:focus-visible { border-color: var(--color-fg); }
+.at-countdown { margin: 0; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+
+.at td.due { white-space: nowrap; font-variant-numeric: tabular-nums; }
+.at td.due.late { color: var(--color-bad); font-weight: 600; }
+</style>
+
+<div class="at">
+  <nav class="at-tabs" role="tablist" aria-label="Views">
+    <button role="tab" id="tab-acceptance" aria-controls="acceptance" aria-selected="true">Acceptance criteria</button>
+    <button role="tab" id="tab-assets" aria-controls="assets" aria-selected="false">Software assets</button>
+    <button role="tab" id="tab-bills" aria-controls="bills" aria-selected="false">Bills</button>
+    <button role="tab" id="tab-design" aria-controls="design" aria-selected="false">Design</button>
+  </nav>
+  <div id="acceptance" role="tabpanel" aria-labelledby="tab-acceptance" class="at" style="gap:var(--cds-gap-lg)">
+  <header class="at-head" id="summary-head">
+    <h1>PayPal AI Hackathon tracker</h1>
+    <p><b><span data-source="summary" data-field="submission_done" class="dash-skeleton">—</span> of <span data-source="summary" data-field="submission_total" class="dash-skeleton">—</span> submission requirements done.</b> Gig-worker money assistant on the PayPal sandbox. Devpost closes Thu 12 Nov, 12:00 PT (20:00 UK); target Wed 11 Nov. Judging 1–15 Dec, winners around 21 Dec.</p>
+  </header>
+
+  <section class="at-tiles" id="tiles" aria-label="Status counts">
+    <div class="at-tile ok"><span class="lab">Done</span><span class="num dash-skeleton" data-source="summary" data-field="done">—</span></div>
+    <div class="at-tile warn"><span class="lab">Partly done</span><span class="num dash-skeleton" data-source="summary" data-field="partial">—</span></div>
+    <div class="at-tile bad"><span class="lab">Not started</span><span class="num dash-skeleton" data-source="summary" data-field="todo">—</span></div>
+    <div class="at-tile"><span class="lab">Submission requirements done</span><span class="num dash-skeleton" data-source="summary" data-field="submission_share">—</span>
+      <div class="at-bar" data-source="summary" id="subbar" aria-hidden="true"></div></div>
+  </section>
+
+  <section class="at-card at-left" id="left">
+    <h2>Left before submission</h2>
+    <p class="at-countdown"><span id="days-left">—</span> · <span data-source="left_summary" data-field="blocking" class="dash-skeleton">—</span> blocking items, <span data-source="left_summary" data-field="nice" class="dash-skeleton">—</span> nice to have · dates in red are past due</p>
+    <div class="at-scroll" id="left-box"></div>
+    <h2 style="margin-top:var(--cds-gap-md)">Nice to have</h2>
+    <div class="at-scroll" id="nice-box"></div>
+  </section>
+
+  <section class="at-card" id="criteria">
+    <div style="display:flex;flex-wrap:wrap;gap:var(--cds-gap-sm);justify-content:space-between;align-items:center">
+      <div><h2>Every criterion</h2><p class="note">From the official rules at paypalaihackathon.devpost.com/rules (read 24 Oct 2026).</p></div>
+      <div class="at-filter" role="group" aria-label="Filter by status" id="filter"></div>
+    </div>
+    <div id="groups"></div>
+  </section>
+</div>
+  <div id="assets" role="tabpanel" aria-labelledby="tab-assets" class="at" style="gap:var(--cds-gap-lg)" hidden>
+    <header class="at-head">
+      <h1>Software asset register</h1>
+      <p><b><span data-source="sam_summary" data-field="components" class="dash-skeleton">—</span> components</b> across models, services, libraries, images and tools. <span data-source="sam_summary" data-field="open_actions" class="dash-skeleton">—</span> have an open action. Licences are checked against publishing this repo under Apache-2.0.</p>
+    </header>
+    <section class="at-tiles" aria-label="Licence status">
+      <div class="at-tile ok"><span class="lab">Licence approved</span><span class="num dash-skeleton" data-source="sam_summary" data-field="approved">—</span></div>
+      <div class="at-tile warn"><span class="lab">Approved with conditions</span><span class="num dash-skeleton" data-source="sam_summary" data-field="conditions">—</span></div>
+      <div class="at-tile bad"><span class="lab">Needs review</span><span class="num dash-skeleton" data-source="sam_summary" data-field="review">—</span></div>
+      <div class="at-tile"><span class="lab">Runtime libraries with known CVEs</span><span class="num dash-skeleton" data-source="sam_summary" data-field="libs_with_cves">—</span><span class="lab">from npm audit; <span data-source="sam_summary" data-field="unaudited">—</span> not audited yet</span></div>
+    </section>
+    <section class="at-card" id="sam-actions">
+      <h2>Open actions</h2>
+      <p class="note">Components whose licence, security or lifecycle needs something done.</p>
+      <div class="at-scroll" id="sam-actions-box"></div>
+    </section>
+    <section class="at-card" id="sam-register">
+      <div style="display:flex;flex-wrap:wrap;gap:var(--cds-gap-sm);justify-content:space-between;align-items:center">
+        <div><h2>Full register</h2><p class="note">Versions from npm and the local tools on 24 Oct; licences from package metadata.</p></div>
+        <div style="display:flex;flex-wrap:wrap;gap:var(--cds-gap-xs);align-items:center">
+          <input class="at-search" id="sam-search" type="search" placeholder="Search name or licence" aria-label="Search the register">
+          <div class="at-filter" role="group" aria-label="Filter by category" id="sam-filter"></div>
+        </div>
+      </div>
+      <div class="at-scroll tall" id="sam-box"></div>
+    </section>
+  </div>
+  <div id="bills" role="tabpanel" aria-labelledby="tab-bills" class="at" style="gap:var(--cds-gap-lg)" hidden>
+    <header class="at-head">
+      <h1>Project bills</h1>
+      <p><b><span data-source="bills_summary" data-field="spent_total" class="dash-skeleton">—</span> billed so far</b> for the model API and hosting, entered from each provider's console. PayPal sandbox is free. Last updated <span data-source="finops_plan" data-field="exported_at" data-row="0" class="dash-skeleton">—</span>. Still to add from a console reading: <span data-source="finops_plan" data-field="pending" data-row="0" class="dash-skeleton">—</span>.</p>
+    </header>
+    <section class="at-tiles" aria-label="Spend">
+      <div class="at-tile"><span class="lab">Spent this month</span><span class="num dash-skeleton" data-source="bills_summary" data-field="month_to_date">—</span></div>
+      <div class="at-tile" id="bl-left-tile"><span class="lab">Monthly budget left</span><span class="num dash-skeleton" data-source="bills_summary" data-field="budget_left">—</span><span class="lab">of <span data-source="finops_plan" data-field="budget_usd_month" data-row="0">—</span> a month</span></div>
+      <div class="at-tile warn"><span class="lab">Forecast to 15 Dec</span><span class="num dash-skeleton" data-source="bills_summary" data-field="forecast_total">—</span><span class="lab">billed so far + hosting and model use from the demo going live to 15 Dec</span></div>
+    </section>
+    <section class="at-card" id="bl-months">
+      <h2>Spend by month against the budget</h2>
+      <p class="note" id="bl-months-note">Billed cost, plus the forecast for hosting and model use while the demo is live.</p>
+      <div class="bl-legend" aria-hidden="true"><span><i style="background:var(--bl-c)"></i>Billed</span><span><i style="background:var(--bl-c);opacity:.35"></i>Forecast</span><span><i style="background:var(--color-bad);height:2px;vertical-align:3px"></i>Monthly budget</span></div>
+      <div class="bl-chart" id="bl-chart" data-source="bills_forecast"></div>
+    </section>
+    <section class="at-card" id="bl-items">
+      <h2>Line items</h2>
+      <p class="note">Each day's charges by item, from console readings.</p>
+      <div class="at-scroll tall" id="bl-box"></div>
+    </section>
+  </div>
+  <div id="design" role="tabpanel" aria-labelledby="tab-design" class="at" style="gap:var(--cds-gap-lg)" hidden>
+    <header class="at-head">
+      <h1>Design pages</h1>
+      <p>The written design for Gig Money. Each opens in a new tab; the tracker above is what's done.</p>
+    </header>
+    <section class="dz-cards" id="design-cards" data-source="design_docs" aria-label="Design pages"></section>
+  </div>
+</div>
+
+<script>
+const ORDER = ["Not started", "Partly done", "Done"];
+const GROUPS = [
+  ["Milestones", "Milestones"],
+  ["Submission", "Submission requirements"],
+  ["Project", "Project requirements (Stage One, pass/fail)"],
+  ["Eligibility", "Eligibility"],
+  ["Judging", "Judging criteria (Stage Two, equally weighted, tie-break in this order)"],
+  ["Non-functional", "Non-functional requirements"],
+  ["Prizes", "Prizes worth aiming for"],
+  ["Constraints", "Project constraints"],
+];
+const DEADLINE = Date.parse("2026-11-12T20:00:00Z");
+let show = "All";
+
+dash.calc("summary", {
+  title: "Status counts",
+  description: "Counts criteria by status, and the share of submission requirements that are done.",
+  inputs: ["acceptance"],
+  fn: (acceptance) => {
+    const sub = acceptance.filter((r) => r.group === "Submission");
+    const subDone = sub.filter((r) => r.status === "Done").length;
+    return {
+      done: acceptance.filter((r) => r.status === "Done").length,
+      partial: acceptance.filter((r) => r.status === "Partly done").length,
+      todo: acceptance.filter((r) => r.status === "Not started").length,
+      submission_done: subDone,
+      submission_total: sub.length,
+      submission_share: sub.length ? subDone / sub.length : 0,
+      submission_partial_share: sub.length ? sub.filter((r) => r.status === "Partly done").length / sub.length : 0,
+    };
+  },
+});
+
+dash.calc("left_summary", {
+  title: "Items left",
+  description: "Counts criteria not yet Done that have a planned order: blocking ones (needed to submit) and nice-to-have ones.",
+  inputs: ["acceptance"],
+  fn: (acceptance) => {
+    const open = acceptance.filter((r) => r.status !== "Done" && r.order != null);
+    return { blocking: open.filter((r) => r.blocking).length, nice: open.filter((r) => !r.blocking).length };
+  },
+});
+
+const pct = d3.format(".0%");
+const dayFmt = (s) => new Date(s + "T12:00:00Z").toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" });
+const filterBox = document.getElementById("filter");
+["All", ...ORDER].forEach((s) => {
+  const b = document.createElement("button");
+  b.type = "button"; b.textContent = s; b.setAttribute("aria-pressed", String(s === show));
+  b.addEventListener("click", () => { show = s; filterBox.querySelectorAll("button").forEach((x) => x.setAttribute("aria-pressed", String(x.textContent === show))); draw(); });
+  filterBox.append(b);
+});
+
+function pill(status) { const p = document.createElement("span"); p.className = "pill " + status.split(" ")[0]; p.textContent = status; return p; }
+function empty(txt) { const p = document.createElement("p"); p.className = "empty-row"; p.textContent = txt; return p; }
+
+function fillSummary() {
+  const s = dash.data("summary");
+  document.querySelectorAll('[data-source="summary"][data-field]').forEach((el) => {
+    if (s.status !== "ok") { el.textContent = "—"; return; }
+    el.classList.remove("dash-skeleton");
+    const f = el.dataset.field, v = s.data[f];
+    el.textContent = f.endsWith("_share") ? pct(v) : d3.format(",")(v);
+  });
+  const bar = document.getElementById("subbar");
+  bar.replaceChildren();
+  if (s.status === "ok") {
+    const a = document.createElement("span"); a.style.width = pct(s.data.submission_share); a.style.background = "var(--color-ok)";
+    const b = document.createElement("span"); b.style.width = pct(s.data.submission_partial_share); b.style.background = "var(--color-warn)";
+    bar.append(a, b);
+  }
+  const days = Math.ceil((DEADLINE - Date.now()) / 864e5);
+  document.getElementById("days-left").textContent = days > 0 ? `${days} days until Devpost closes` : "Submissions closed";
+}
+
+function leftTable(rows) {
+  const t = document.createElement("table");
+  t.dataset.source = "acceptance"; t.dataset.rowKey = "id";
+  const head = t.createTHead().insertRow();
+  [["order", "#", "mono"], ["item", "Item", ""], ["status", "Status", ""], ["due", "Due", "due"], ["owner", "Who", "own"], ["effort", "Time", "own hide-narrow"], ["next", "Next step", "muted hide-narrow"]].forEach(([f, label, cls]) => {
+    const th = document.createElement("th"); th.dataset.field = f; th.textContent = label; if (cls) th.className = cls; head.append(th);
+  });
+  const tb = t.createTBody();
+  const today = new Date().toISOString().slice(0, 10);
+  rows.forEach((r) => {
+    const tr = tb.insertRow(); tr.dataset.key = r.id;
+    const c0 = tr.insertCell(); c0.className = "mono"; c0.textContent = r.order;
+    const c1 = tr.insertCell(); c1.className = "item"; c1.textContent = r.item;
+    tr.insertCell().append(pill(r.status));
+    const cd = tr.insertCell(); cd.className = "due" + (r.due && r.due < today ? " late" : ""); cd.textContent = r.due ? dayFmt(r.due) : "";
+    const c3 = tr.insertCell(); c3.className = "own"; c3.textContent = r.owner || "";
+    const c4 = tr.insertCell(); c4.className = "own hide-narrow"; c4.textContent = r.effort || "";
+    const c5 = tr.insertCell(); c5.className = "muted hide-narrow"; c5.textContent = r.next || "";
+  });
+  return t;
+}
+
+function drawLeft() {
+  const d = dash.data("acceptance"), s = dash.data("left_summary");
+  const box = document.getElementById("left-box"), nice = document.getElementById("nice-box");
+  document.querySelectorAll('[data-source="left_summary"][data-field]').forEach((el) => {
+    if (s.status !== "ok") { el.textContent = "—"; return; }
+    el.classList.remove("dash-skeleton"); el.textContent = s.data[el.dataset.field];
+  });
+  if (d.status !== "ok") { [box, nice].forEach((b) => b.replaceChildren()); return; }
+  const open = d.data.filter((r) => r.status !== "Done" && r.order != null).sort((a, b) => a.order - b.order);
+  const blocking = open.filter((r) => r.blocking), extra = open.filter((r) => !r.blocking);
+  box.replaceChildren(blocking.length ? leftTable(blocking) : empty("Nothing left. Submit."));
+  nice.replaceChildren(extra.length ? leftTable(extra) : empty("Nothing optional left."));
+}
+
+function draw() {
+  const d = dash.data("acceptance");
+  const box = document.getElementById("groups");
+  box.replaceChildren();
+  if (d.status !== "ok") { box.append(empty(d.status === "error" ? "Failed to load" : "")); return; }
+  const rows = d.data.filter((r) => show === "All" || r.status === show);
+  for (const [g, label] of GROUPS) {
+    const gr = rows.filter((r) => r.group === g).sort((a, b) => ORDER.indexOf(a.status) - ORDER.indexOf(b.status));
+    if (!gr.length) continue;
+    const h = document.createElement("h2"); h.textContent = label; h.style.marginTop = "var(--cds-gap-md)"; h.id = "group-" + g.toLowerCase();
+    const wrap = document.createElement("div"); wrap.className = "at-scroll";
+    const t = document.createElement("table");
+    t.dataset.source = "acceptance"; t.dataset.rowKey = "id";
+    const thead = t.createTHead().insertRow();
+    [["item", "Criterion", ""], ["status", "Status", ""], ["detail", "Where it stands", "hide-narrow"], ["next", "Next step", ""]].forEach(([f, txt, cls]) => {
+      const th = document.createElement("th"); th.dataset.field = f; th.textContent = txt; if (cls) th.className = cls; thead.append(th);
+    });
+    const tb = t.createTBody();
+    for (const r of gr) {
+      const tr = tb.insertRow(); tr.dataset.key = r.id;
+      const c1 = tr.insertCell(); c1.className = "item"; c1.textContent = r.item;
+      tr.insertCell().append(pill(r.status));
+      const c3 = tr.insertCell(); c3.className = "muted hide-narrow"; c3.textContent = r.detail;
+      const c4 = tr.insertCell(); c4.textContent = r.next;
+    }
+    wrap.append(t); box.append(h, wrap);
+  }
+  if (!box.children.length) box.append(empty("Nothing with this status."));
+}
+
+
+
+// ---- Tabs ----
+const TABS = ["acceptance", "assets", "bills", "design"];
+function showTab(id) {
+  TABS.forEach((t) => {
+    document.getElementById(t).hidden = t !== id;
+    document.getElementById("tab-" + t).setAttribute("aria-selected", String(t === id));
+  });
+  dash.setLink(id);
+}
+TABS.forEach((t) => document.getElementById("tab-" + t).addEventListener("click", () => showTab(t)));
+if (TABS.includes(location.hash.slice(1))) showTab(location.hash.slice(1));
+
+// ---- Software assets ----
+const CATS = ["AI model", "Cloud service", "Runtime library (direct)", "Runtime library (transitive)", "Container image", "Dev tool"];
+let samCat = "All", samQuery = "";
+
+dash.calc("sam_summary", {
+  title: "Asset counts",
+  description: "Counts components by licence status, open actions, and runtime libraries whose security note reports a known CVE.",
+  inputs: ["software_assets"],
+  fn: (software_assets) => ({
+    components: software_assets.length,
+    approved: software_assets.filter((r) => r.licence_status === "Approved").length,
+    conditions: software_assets.filter((r) => r.licence_status === "Approved with conditions").length,
+    review: software_assets.filter((r) => r.licence_status === "Needs review").length,
+    open_actions: software_assets.filter((r) => r.action).length,
+    libs_with_cves: software_assets.filter((r) => r.category.startsWith("Runtime library") && /^Known CVE/.test(r.security)).length,
+    unaudited: software_assets.filter((r) => /^Not audited/.test(r.security)).length,
+  }),
+});
+
+const samFilter = document.getElementById("sam-filter");
+["All", ...CATS].forEach((c) => {
+  const b = document.createElement("button");
+  b.type = "button"; b.textContent = c.replace("Runtime library ", "Library "); b.dataset.cat = c; b.setAttribute("aria-pressed", String(c === samCat));
+  b.addEventListener("click", () => { samCat = c; samFilter.querySelectorAll("button").forEach((x) => x.setAttribute("aria-pressed", String(x.dataset.cat === samCat))); drawSam(); });
+  samFilter.append(b);
+});
+document.getElementById("sam-search").addEventListener("input", (e) => { samQuery = e.target.value.trim().toLowerCase(); drawSam(); });
+
+function pillClass(s) { return s === "Approved" ? "Approved" : s === "Needs review" ? "Needs" : "cond"; }
+
+function samTable(rows, cols) {
+  const t = document.createElement("table");
+  t.dataset.source = "software_assets"; t.dataset.rowKey = "id";
+  const head = t.createTHead().insertRow();
+  cols.forEach(([f, label, cls]) => { const th = document.createElement("th"); th.dataset.field = f; th.textContent = label; if (cls) th.className = cls; head.append(th); });
+  const tb = t.createTBody();
+  rows.forEach((r) => {
+    const tr = tb.insertRow(); tr.dataset.key = r.id;
+    cols.forEach(([f, , cls]) => {
+      const td = tr.insertCell(); if (cls) td.className = cls;
+      if (f === "licence_status") { const p = document.createElement("span"); p.className = "pill " + pillClass(r[f]); p.textContent = r[f]; td.append(p); }
+      else td.textContent = r[f];
+      if (f === "name") td.classList.add("item");
+    });
+  });
+  return t;
+}
+
+function fillSamSummary() {
+  const s = dash.data("sam_summary");
+  document.querySelectorAll('[data-source="sam_summary"][data-field]').forEach((el) => {
+    if (s.status !== "ok") { el.textContent = "—"; return; }
+    el.classList.remove("dash-skeleton");
+    el.textContent = d3.format(",")(s.data[el.dataset.field]);
+  });
+}
+
+function drawSam() {
+  const d = dash.data("software_assets");
+  const actions = document.getElementById("sam-actions-box"), box = document.getElementById("sam-box");
+  if (d.status !== "ok") {
+    [actions, box].forEach((b) => { const p = document.createElement("p"); p.className = "empty-row"; p.textContent = d.status === "error" ? "Failed to load" : ""; b.replaceChildren(p); });
+    return;
+  }
+  const rank = { "Needs review": 0, "Approved with conditions": 1, "Approved": 2 };
+  const open = d.data.filter((r) => r.action).sort((a, b) => rank[a.licence_status] - rank[b.licence_status]);
+  actions.replaceChildren(samTable(open, [["name", "Component", ""], ["licence_status", "Licence", ""], ["security", "Security", "muted hide-narrow"], ["action", "Action", ""]]));
+  const rows = d.data.filter((r) => (samCat === "All" || r.category === samCat) &&
+    (!samQuery || (r.name + " " + r.licence).toLowerCase().includes(samQuery)));
+  if (!rows.length) { const p = document.createElement("p"); p.className = "empty-row"; p.textContent = "No components match."; box.replaceChildren(p); return; }
+  box.replaceChildren(samTable(rows, [["name", "Component", ""], ["category", "Type", "muted hide-narrow"], ["version", "Version", "mono"], ["licence", "Licence", "muted"], ["licence_status", "Status", ""], ["where", "Where", "muted hide-narrow"], ["cost", "Cost", "muted hide-narrow"], ["lifecycle", "Lifecycle", "muted hide-narrow"], ["security", "Security", "muted hide-narrow"]]));
+}
+
+// ---- Bills ----
+dash.calc("bills_forecast", {
+  title: "Spend by month",
+  description: "Billed cost per month, plus a forecast for hosting (hourly rate) and model use (monthly estimate) from the demo going live until the end of judging.",
+  inputs: ["bills", "finops_plan"],
+  fn: (bills, finops_plan) => {
+    const p = finops_plan[0];
+    const rate = Number(p.hosting_usd_per_hour), model = Number(p.model_usd_month_estimate);
+    const from = Math.max(Date.parse(p.run_start), Date.parse(p.exported_at));
+    const to = Date.parse(p.run_end) + 864e5;
+    const out = [];
+    for (let m = Date.UTC(2026, 9, 1); m < to; ) {
+      const d = new Date(m), next = Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 1);
+      const key = d.toISOString().slice(0, 7);
+      const actual = bills.filter((r) => r.date.slice(0, 7) === key).reduce((a, r) => a + Number(r.cost_usd), 0);
+      const live = Math.max(0, Math.min(next, to) - Math.max(m, from));
+      const forecast = live / 36e5 * rate + live / (next - m) * model;
+      out.push({ month: key, actual, forecast, total: actual + forecast, budget: Number(p.budget_usd_month) });
+      m = next;
+    }
+    return out;
+  },
+});
+
+dash.calc("bills_summary", {
+  title: "Spend totals",
+  description: "Total billed, billed in the export's month, monthly budget left, and the forecast total to the end of the run window.",
+  inputs: ["bills", "finops_plan", "bills_forecast"],
+  fn: (bills, finops_plan, bills_forecast) => {
+    const p = finops_plan[0], month = p.exported_at.slice(0, 7);
+    const mtd = bills.filter((r) => r.date.slice(0, 7) === month).reduce((a, r) => a + Number(r.cost_usd), 0);
+    return {
+      spent_total: bills.reduce((a, r) => a + Number(r.cost_usd), 0),
+      month_to_date: mtd,
+      budget_left: Number(p.budget_usd_month) - mtd,
+      budget_left_share: (Number(p.budget_usd_month) - mtd) / Number(p.budget_usd_month),
+      forecast_total: bills_forecast.reduce((a, r) => a + r.total, 0),
+      months_over_budget: bills_forecast.filter((r) => r.total > r.budget).length,
+    };
+  },
+});
+
+const usd = (v) => (Math.abs(v) < 1 && v !== 0 ? d3.format("$.3f") : d3.format("$,.2f"))(v);
+const monthName = (k) => new Date(k + "-01T00:00:00Z").toLocaleString("en-GB", { month: "short", year: "numeric", timeZone: "UTC" });
+
+function fillBills() {
+  const s = dash.data("bills_summary"), p = dash.data("finops_plan");
+  document.querySelectorAll('[data-source="bills_summary"][data-field]').forEach((el) => {
+    if (s.status !== "ok") { el.textContent = "—"; return; }
+    el.classList.remove("dash-skeleton"); el.textContent = usd(s.data[el.dataset.field]);
+  });
+  document.querySelectorAll('[data-source="finops_plan"][data-field]').forEach((el) => {
+    if (p.status !== "ok" || !p.data.length) { el.textContent = "—"; return; }
+    el.classList.remove("dash-skeleton");
+    const f = el.dataset.field, v = p.data[0][f];
+    el.textContent = /_usd/.test(f) ? usd(Number(v)) : f === "exported_at" ? v.replace("T", " ").replace("Z", " UTC") : v;
+  });
+  const tile = document.getElementById("bl-left-tile");
+  tile.classList.remove("ok", "warn", "bad");
+  if (s.status === "ok") tile.classList.add(s.data.budget_left_share < 0 ? "bad" : s.data.budget_left_share < 0.2 ? "warn" : "ok");
+}
+
+function drawBillsChart() {
+  const box = document.getElementById("bl-chart"), f = dash.data("bills_forecast");
+  box.replaceChildren();
+  box.style.setProperty("--bl-c", dash.colors[0]);
+  document.getElementById("bl-months").style.setProperty("--bl-c", dash.colors[0]);
+  if (f.status !== "ok") { const p = document.createElement("p"); p.className = "empty-row"; p.textContent = f.status === "error" ? "Failed to load" : ""; box.append(p); return; }
+  const rows = f.data, W = Math.max(280, box.clientWidth), H = 240, m = { t: 22, r: 8, b: 26, l: 48 };
+  const x = d3.scaleBand(rows.map((r) => r.month), [m.l, W - m.r]).padding(0.35);
+  const y = d3.scaleLinear([0, d3.max(rows, (r) => Math.max(r.total, r.budget)) * 1.15], [H - m.b, m.t]).nice();
+  const svg = d3.select(box).append("svg").attr("width", "100%").attr("viewBox", `0 0 ${W} ${H}`).attr("role", "img")
+    .attr("aria-label", "Billed and forecast spend per month against the monthly budget");
+  svg.append("g").attr("transform", `translate(${m.l},0)`).call(d3.axisLeft(y).ticks(5).tickFormat(d3.format("$,.0f")).tickSize(-(W - m.l - m.r)))
+    .call((g) => { g.select(".domain").remove(); g.selectAll("line").attr("stroke", "var(--cds-chart-grid)"); });
+  svg.append("g").attr("transform", `translate(0,${H - m.b})`).call(d3.axisBottom(x).tickFormat(monthName).tickSize(0))
+    .call((g) => g.select(".domain").attr("stroke", "var(--color-border-line)"));
+  const tip = document.createElement("div"); tip.className = "bl-tip"; box.append(tip);
+  const g = svg.append("g").selectAll("g").data(rows).join("g");
+  g.append("rect").attr("x", (r) => x(r.month)).attr("width", x.bandwidth()).attr("y", (r) => y(r.actual)).attr("height", (r) => y(0) - y(r.actual)).attr("fill", dash.colors[0]);
+  g.append("rect").attr("x", (r) => x(r.month)).attr("width", x.bandwidth()).attr("y", (r) => y(r.total)).attr("height", (r) => y(r.actual) - y(r.total)).attr("fill", dash.colors[0]).attr("opacity", 0.35);
+  g.append("text").attr("x", (r) => x(r.month) + x.bandwidth() / 2).attr("y", (r) => y(r.total) - 6).attr("text-anchor", "middle")
+    .style("fill", (r) => (r.total > r.budget ? "var(--color-bad)" : "var(--color-fg)")).text((r) => usd(r.total));
+  svg.append("line").attr("x1", m.l).attr("x2", W - m.r).attr("y1", y(rows[0].budget)).attr("y2", y(rows[0].budget))
+    .attr("stroke", "var(--color-bad)").attr("stroke-width", 2).attr("stroke-dasharray", "6 4");
+  g.append("rect").attr("x", (r) => x(r.month) - x.step() * x.paddingInner() / 2).attr("width", x.step()).attr("y", m.t).attr("height", H - m.t - m.b).attr("fill", "transparent")
+    .on("pointermove", (e, r) => {
+      tip.textContent = `${monthName(r.month)}: billed ${usd(r.actual)} + forecast ${usd(r.forecast)} = ${usd(r.total)} (budget ${usd(r.budget)})`;
+      tip.style.display = "block";
+      const [px, py] = d3.pointer(e, box), w = tip.offsetWidth;
+      tip.style.left = Math.min(Math.max(0, px - w / 2), box.clientWidth - w) + "px"; tip.style.top = Math.max(0, py - 40) + "px";
+    })
+    .on("pointerleave", () => { tip.style.display = "none"; });
+  const over = rows.filter((r) => r.total > r.budget).map((r) => monthName(r.month));
+  document.getElementById("bl-months-note").textContent = "Billed cost, plus the forecast for hosting and model use while the demo is live." +
+    (over.length ? ` Forecast goes over the monthly budget in ${over.join(" and ")}.` : " Every month stays inside the budget.");
+}
+
+function drawBillsTable() {
+  const d = dash.data("bills"), box = document.getElementById("bl-box");
+  if (d.status !== "ok") { const p = document.createElement("p"); p.className = "empty-row"; p.textContent = d.status === "error" ? "Failed to load" : ""; box.replaceChildren(p); return; }
+  if (!d.data.length) { const p = document.createElement("p"); p.className = "empty-row"; p.textContent = "No charges yet."; box.replaceChildren(p); return; }
+  const cols = [["date", "Date", "mono"], ["provider", "Provider", "muted hide-narrow"], ["item", "Item", ""], ["quantity", "Usage", "num hide-narrow"], ["cost_usd", "Cost (USD)", "num"], ["source", "Source", "muted hide-narrow"]];
+  const t = document.createElement("table"); t.dataset.source = "bills"; t.dataset.rowKey = "id";
+  const head = t.createTHead().insertRow();
+  cols.forEach(([f, label, cls]) => { const th = document.createElement("th"); th.dataset.field = f; th.textContent = label; if (cls) th.className = cls; head.append(th); });
+  const tb = t.createTBody();
+  [...d.data].sort((a, b) => b.date.localeCompare(a.date) || Number(b.cost_usd) - Number(a.cost_usd)).forEach((r) => {
+    const tr = tb.insertRow(); tr.dataset.key = r.id;
+    cols.forEach(([f, , cls]) => {
+      const td = tr.insertCell(); if (cls) td.className = cls;
+      td.textContent = f === "cost_usd" ? d3.format("$,.4f")(Number(r[f])) : f === "quantity" ? (Number(r.quantity) ? `${d3.format(",.2f")(Number(r.quantity))} ${r.unit}` : "") : r[f];
+    });
+  });
+  box.replaceChildren(t);
+}
+
+
+// ---- Design pages ----
+function drawDesign() {
+  const d = dash.data("design_docs"), box = document.getElementById("design-cards");
+  box.replaceChildren();
+  if (d.status !== "ok") { const p = document.createElement("p"); p.className = "empty-row"; p.textContent = d.status === "error" ? "Failed to load" : ""; box.append(p); return; }
+  for (const r of d.data) {
+    const card = document.createElement("article"); card.className = "dz-card";
+    const h = document.createElement("h2"); h.textContent = r.title;
+    const p = document.createElement("p"); p.textContent = r.covers;
+    const meta = document.createElement("span"); meta.className = "meta";
+    meta.textContent = `Updated ${new Date(r.updated + "T12:00:00Z").toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" })} · source ${r.source}`;
+    const a = document.createElement("a"); a.className = "open"; a.href = r.url; a.target = "_blank"; a.rel = "noopener"; a.textContent = "Open " + r.title;
+    card.append(h, p, meta, a); box.append(card);
+  }
+}
+
+dash.onData(() => { fillSummary(); drawLeft(); draw(); fillSamSummary(); drawSam(); fillBills(); drawBillsChart(); drawBillsTable(); drawDesign(); });
+</script>
