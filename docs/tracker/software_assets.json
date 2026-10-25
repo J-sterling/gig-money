@@ -14,16 +14,16 @@
  },
  {
   "id": "model",
-  "name": "AI model for tagging and drafting",
+  "name": "NVIDIA Nemotron 3 Super 120B (free, via OpenRouter)",
   "category": "AI model",
-  "version": "not chosen",
-  "licence": "Provider terms",
-  "licence_status": "Needs review",
-  "where": "Provider API",
-  "cost": "Pay as you go",
-  "lifecycle": "n/a",
-  "security": "Key server-side only",
-  "action": "Choose the model and provider; record its price per 1M tokens here."
+  "version": "nvidia/nemotron-3-super-120b-a12b:free",
+  "licence": "NVIDIA Open Model License; OpenRouter terms",
+  "licence_status": "Approved with conditions",
+  "where": "OpenRouter (provider servers)",
+  "cost": "Free (rate-limited)",
+  "lifecycle": "Current",
+  "security": "Key server-side only; free endpoints may log prompts, so synthetic data only",
+  "action": "Check daily limits with npm run check:model; app cap MODEL_DAILY_LIMIT=40."
  },
  {
   "id": "svc-render",
@@ -73,9 +73,48 @@
   "licence_status": "Approved",
   "where": "App server",
   "cost": "Free",
+  "lifecycle": "Deferred",
+  "security": "Not installed: v1.11.0 pulls ai v4, langchain and openai with 12 known vulnerabilities (11 high)",
+  "action": "Deferred. Invoicing is called directly through src/paypal.js; revisit if a fixed release appears."
+ },
+ {
+  "id": "lib-ai",
+  "name": "ai (Vercel AI SDK)",
+  "category": "Runtime library (direct)",
+  "version": "7.0.153",
+  "licence": "Apache-2.0",
+  "licence_status": "Approved",
+  "where": "App server",
+  "cost": "Free",
   "lifecycle": "Current",
-  "security": "Not audited yet (no lockfile)",
-  "action": "Run npm audit once installed."
+  "security": "No known CVEs (npm audit, 25 Oct)",
+  "action": ""
+ },
+ {
+  "id": "lib-openrouter",
+  "name": "@openrouter/ai-sdk-provider",
+  "category": "Runtime library (direct)",
+  "version": "3.1.0",
+  "licence": "Apache-2.0",
+  "licence_status": "Approved",
+  "where": "App server",
+  "cost": "Free",
+  "lifecycle": "Current",
+  "security": "No known CVEs (npm audit, 25 Oct)",
+  "action": ""
+ },
+ {
+  "id": "lib-zod",
+  "name": "zod",
+  "category": "Runtime library (direct)",
+  "version": "4.6.7",
+  "licence": "MIT",
+  "licence_status": "Approved",
+  "where": "App server",
+  "cost": "Free",
+  "lifecycle": "Current",
+  "security": "No known CVEs (npm audit, 25 Oct)",
+  "action": ""
  },
  {
   "id": "lib-server-sdk",

@@ -16,6 +16,12 @@ id = "paypal-client-id-assignment"
 description = "A value assigned to PAYPAL_CLIENT_ID"
 regex = '''PAYPAL_CLIENT_ID\s*[=:]\s*['"]?[A-Za-z0-9_-]{20,}'''
 
+# OpenRouter keys start with "sk-or-v1-".
+[[rules]]
+id = "openrouter-api-key"
+description = "OpenRouter API key"
+regex = '''\bsk-or-v1-[a-f0-9]{32,}'''
+
 [allowlist]
 description = "Documented placeholders and test fixtures"
 paths = ['''\.env\.example$''']

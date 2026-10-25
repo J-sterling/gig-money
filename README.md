@@ -4,7 +4,7 @@ A PayPal money assistant for gig workers. Payments arrive from PayPal by webhook
 
 > Built for the PayPal AI Hackathon 2026. Runs against the **PayPal sandbox only**; no real money moves.
 
-**Status (24 Oct 2026):** PayPal plumbing only: credential check, webhook receiver with signature verification, and a test order. The ledger, AI tagging, tax estimate and invoices come next.
+**Status (25 Oct 2026):** PayPal plumbing (credential check, verified webhooks, test order) and the first AI step: drafting an invoice from a sentence. The ledger, approval screen and sending through PayPal Invoicing come next.
 
 ## Run it
 
@@ -26,6 +26,16 @@ Needs Node 22 or newer and a free PayPal developer account.
 4. **Make a test payment.** `npm run order:create` prints a PayPal link. Approve it as the sandbox **personal** account; you're sent back to `/return`, which captures the order. Open `/events`: `PAYMENT.CAPTURE.COMPLETED` should be listed with `"verified": true`.
 
 Events from the dashboard's Webhooks Simulator are mock events. They fail signature verification, so they're logged with `"verified": false` and never reach the ledger.
+
+## Model
+
+The AI runs on [OpenRouter](https://openrouter.ai)'s free tier, so it runs on OpenRouter's providers, not on your machine. The default is `nvidia/nemotron-3-super-120b-a12b:free`, which supports tool calling and structured output. To use another model, change `MODEL` in `.env`.
+
+1. Create a free key at openrouter.ai and put it in `.env` as `OPENROUTER_API_KEY`.
+2. `npm run check:model` shows the key's limits and confirms the model is free and supports tools.
+3. `npm run draft -- "invoice Northside Café £120 for Saturday's shoot, due in 14 days"` prints a draft. **Nothing is sent**: drafts only go to PayPal after you approve them.
+
+Free models have daily limits, and the app adds its own cap (`MODEL_DAILY_LIMIT`, default 40 calls a day). Free endpoints may log prompts, so use only made-up data.
 
 ## Development
 
