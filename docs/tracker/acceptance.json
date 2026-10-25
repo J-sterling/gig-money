@@ -1,0 +1,472 @@
+[
+ {
+  "id": "M1",
+  "group": "Milestones",
+  "item": "Sandbox REST app and credentials",
+  "status": "Not started",
+  "detail": "Sandbox business and personal accounts exist (auto-created). No REST app yet.",
+  "next": "Create a Sandbox app in Apps & Credentials; put the ID and secret in the Ansible vault, then .env via key-from-vault.sh.",
+  "order": 1,
+  "owner": "You",
+  "effort": "15 min",
+  "blocking": true,
+  "due": "2026-10-27"
+ },
+ {
+  "id": "M2",
+  "group": "Milestones",
+  "item": "First sandbox API call works",
+  "status": "Partly done",
+  "detail": "scripts/check-credentials.js is written and tested offline (24 Oct): gets a token and lists webhooks, prints no secrets.",
+  "next": "Run npm run check once the sandbox credentials are in .env.",
+  "order": 2,
+  "owner": "Claude",
+  "effort": "1 h",
+  "blocking": true,
+  "due": "2026-10-28"
+ },
+ {
+  "id": "M3",
+  "group": "Milestones",
+  "item": "Sandbox webhook event received",
+  "status": "Partly done",
+  "detail": "Receiver written and tested offline (24 Oct): POST /webhooks/paypal verifies with PayPal, logs to var/events.jsonl, ignores duplicates; register-webhook and create-order scripts ready.",
+  "next": "Start a tunnel, register the webhook, place a sandbox order.",
+  "order": 3,
+  "owner": "Claude + you",
+  "effort": "half a day",
+  "blocking": true,
+  "due": "2026-11-03"
+ },
+ {
+  "id": "M4",
+  "group": "Milestones",
+  "item": "MVP flows work end to end",
+  "status": "Not started",
+  "detail": "Income ledger, tax set-aside estimate, AI-drafted invoice with approval before send, overdue reminder.",
+  "next": "Build after M3; seed script creates sandbox payments.",
+  "order": 4,
+  "owner": "Claude",
+  "effort": "3 days",
+  "blocking": true,
+  "due": "2026-11-07"
+ },
+ {
+  "id": "M5",
+  "group": "Milestones",
+  "item": "README and video finished",
+  "status": "Not started",
+  "detail": "README with judge setup steps; video under 3 minutes.",
+  "next": "Script the video from the user journey.",
+  "order": 5,
+  "owner": "Claude + you",
+  "effort": "1 day",
+  "blocking": true,
+  "due": "2026-11-10"
+ },
+ {
+  "id": "M6",
+  "group": "Milestones",
+  "item": "Submitted on Devpost",
+  "status": "Not started",
+  "detail": "Devpost closes Thu 12 Nov, 12:00 PT (20:00 UK).",
+  "next": "Submit Wed 11 Nov, a day early.",
+  "order": 6,
+  "owner": "You",
+  "effort": "1 h",
+  "blocking": true,
+  "due": "2026-11-11"
+ },
+ {
+  "id": "E1",
+  "group": "Eligibility",
+  "item": "Adult, not PayPal, an affiliate, a judge's employer or their household",
+  "status": "Partly done",
+  "detail": "You are an adult and not a PayPal employee.",
+  "next": "Check your employer against PayPal's affiliates (Venmo, Braintree, Xoom, Honey, Zettle, Paidy, Hyperwallet and others).",
+  "order": 7,
+  "owner": "You",
+  "effort": "10 min",
+  "blocking": true
+ },
+ {
+  "id": "E2",
+  "group": "Eligibility",
+  "item": "Not resident in an excluded country",
+  "status": "Done",
+  "detail": "UK resident; the exclusions are Brazil, Quebec, Russia, Crimea, Cuba, Iran, North Korea and OFAC-sanctioned countries.",
+  "next": ""
+ },
+ {
+  "id": "E3",
+  "group": "Eligibility",
+  "item": "New project, no PayPal or Devpost funding",
+  "status": "Done",
+  "detail": "New repo started 24 Oct, inside the submission period (opened 1 Oct). No PayPal support.",
+  "next": ""
+ },
+ {
+  "id": "E4",
+  "group": "Eligibility",
+  "item": "Registered on Devpost",
+  "status": "Not started",
+  "detail": "Join at paypalaihackathon.devpost.com.",
+  "next": "Click Join Hackathon.",
+  "order": 8,
+  "owner": "You",
+  "effort": "5 min",
+  "blocking": true
+ },
+ {
+  "id": "E5",
+  "group": "Eligibility",
+  "item": "Materials in English",
+  "status": "Done",
+  "detail": "All docs, video and README in English.",
+  "next": ""
+ },
+ {
+  "id": "P1",
+  "group": "Project",
+  "item": "PayPal developer platform integrated, sandbox, and central",
+  "status": "Not started",
+  "detail": "Planned: Orders and capture for income, Invoicing for getting paid, Webhooks for the ledger. PayPal is the data source, the payment rail and the event stream.",
+  "next": "Stage One is pass/fail on this. Show the PayPal calls in the UI and video.",
+  "order": 9,
+  "owner": "Claude",
+  "effort": "in M2-M4",
+  "blocking": true
+ },
+ {
+  "id": "P2",
+  "group": "Project",
+  "item": "AI tool meaningfully used",
+  "status": "Not started",
+  "detail": "Planned: PayPal Agent Toolkit tools plus a model; the AI tags income sources and drafts invoices and reminders.",
+  "next": "Pick the model; the AI must do real work, not decorate.",
+  "order": 10,
+  "owner": "Claude",
+  "effort": "in M4",
+  "blocking": true
+ },
+ {
+  "id": "P3",
+  "group": "Project",
+  "item": "Runs as shown in the video and description",
+  "status": "Not started",
+  "detail": "Rule: the project must install and run consistently and work as depicted.",
+  "next": "Record the video from the real build only.",
+  "order": 11,
+  "owner": "Claude + you",
+  "effort": "",
+  "blocking": true
+ },
+ {
+  "id": "P4",
+  "group": "Project",
+  "item": "Third-party terms respected",
+  "status": "Not started",
+  "detail": "SDKs and APIs used within their licences; no scraped data.",
+  "next": "List components and licences in the README."
+ },
+ {
+  "id": "S1",
+  "group": "Submission",
+  "item": "Text description of features",
+  "status": "Not started",
+  "detail": "Devpost description.",
+  "next": "Draft from the user journey.",
+  "order": 12,
+  "owner": "Claude",
+  "effort": "1 h",
+  "blocking": true
+ },
+ {
+  "id": "S2",
+  "group": "Submission",
+  "item": "Judges can run a working build",
+  "status": "Not started",
+  "detail": "README setup and run instructions, or a hosted URL. A mockup or static prototype doesn't count.",
+  "next": "Do both: README steps plus a Render URL.",
+  "order": 13,
+  "owner": "Claude",
+  "effort": "half a day",
+  "blocking": true
+ },
+ {
+  "id": "S3",
+  "group": "Submission",
+  "item": "Public repo with all source, assets and instructions",
+  "status": "Not started",
+  "detail": "GitHub, public. Seed data and sandbox setup must be in the repo.",
+  "next": "Create with gh after you agree.",
+  "order": 14,
+  "owner": "Claude",
+  "effort": "30 min",
+  "blocking": true
+ },
+ {
+  "id": "S4",
+  "group": "Submission",
+  "item": "Open-source licence visible in About",
+  "status": "Partly done",
+  "detail": "Apache 2.0 LICENSE in the repo (local, not pushed yet).",
+  "next": "Check About shows it after the first push.",
+  "order": 15,
+  "owner": "Claude",
+  "effort": "5 min",
+  "blocking": true
+ },
+ {
+  "id": "S5",
+  "group": "Submission",
+  "item": "Video under 3 min, public on YouTube",
+  "status": "Not started",
+  "detail": "Must show the project working; no third-party trademarks or copyrighted music without permission.",
+  "next": "Use no music or licence-free music only.",
+  "order": 16,
+  "owner": "You",
+  "effort": "half a day",
+  "blocking": true
+ },
+ {
+  "id": "S6",
+  "group": "Submission",
+  "item": "Testing details for judges",
+  "status": "Not started",
+  "detail": "Rules ask for any sandbox login details or keys judges need, free until judging ends 15 Dec.",
+  "next": "Decide: judges create their own sandbox app, or sandbox-only details in the testing instructions. Never live keys.",
+  "order": 17,
+  "owner": "Claude + you",
+  "effort": "30 min",
+  "blocking": true
+ },
+ {
+  "id": "S7",
+  "group": "Submission",
+  "item": "Demo stays free and available until 15 Dec",
+  "status": "Not started",
+  "detail": "Judging runs 1-15 Dec.",
+  "next": "Keep the Render service up; check it on 1 Dec.",
+  "order": 18,
+  "owner": "You",
+  "effort": "",
+  "blocking": true
+ },
+ {
+  "id": "J1",
+  "group": "Judging",
+  "item": "Technological Implementation",
+  "status": "Not started",
+  "detail": "Thorough, skilled use of the PayPal platform and the AI tools; a working, non-trivial build. Tie-break 1.",
+  "next": "Several PayPal APIs plus verified webhooks plus offline tests."
+ },
+ {
+  "id": "J2",
+  "group": "Judging",
+  "item": "Design",
+  "status": "Not started",
+  "detail": "A complete, coherent product, not a proof of concept.",
+  "next": "A web UI for every flow; no CLI-only steps for the user."
+ },
+ {
+  "id": "J3",
+  "group": "Judging",
+  "item": "Potential Impact",
+  "status": "Not started",
+  "detail": "A credible, specific case for a real problem and audience, shown working.",
+  "next": "Gig workers with scattered income and surprise tax bills; show before and after."
+ },
+ {
+  "id": "J4",
+  "group": "Judging",
+  "item": "Innovation / Idea",
+  "status": "Not started",
+  "detail": "Creative and different from existing concepts.",
+  "next": "Say why bookkeeping apps miss multi-app income."
+ },
+ {
+  "id": "J5",
+  "group": "Judging",
+  "item": "Presentation",
+  "status": "Not started",
+  "detail": "The video shows it end to end; the pitch says the problem, who it's for and why it matters.",
+  "next": "Script from the user journey; rehearse under 3 min."
+ },
+ {
+  "id": "B1",
+  "group": "Prizes",
+  "item": "Best Use of PayPal + AI (Honorable Mention, $5k)",
+  "status": "Not started",
+  "detail": "Fits directly: the AI acts through PayPal APIs.",
+  "next": "Stacking: one Grand or one Honorable Mention, plus one sponsor prize."
+ },
+ {
+  "id": "B2",
+  "group": "Prizes",
+  "item": "Best Use of Agentic Commerce (Honorable Mention, $5k)",
+  "status": "Not started",
+  "detail": "The agent drafts, sends (after approval) and chases invoices.",
+  "next": "Show the approval step in the video."
+ },
+ {
+  "id": "B3",
+  "group": "Prizes",
+  "item": "Best Use of AG Grid (sponsor, $5k / $2k / 3x $1k)",
+  "status": "Not started",
+  "detail": "Biggest sponsor prize. The income ledger is a natural grid.",
+  "next": "Build the ledger with AG Grid Community.",
+  "order": 19,
+  "owner": "Claude",
+  "effort": "half a day",
+  "blocking": false
+ },
+ {
+  "id": "B4",
+  "group": "Prizes",
+  "item": "Best Use of Render (sponsor, credits)",
+  "status": "Not started",
+  "detail": "Hosting for the demo and a stable webhook URL.",
+  "next": "Only one sponsor prize can be won; AG Grid is worth more.",
+  "order": 20,
+  "owner": "Claude",
+  "effort": "2 h",
+  "blocking": false
+ },
+ {
+  "id": "B5",
+  "group": "Prizes",
+  "item": "Best Use of APIMatic (sponsor, 3x $1k)",
+  "status": "Not started",
+  "detail": "APIMatic's Context Plugin gives the coding agent PayPal API context.",
+  "next": "Optional; only if it helps the build."
+ },
+ {
+  "id": "C1",
+  "group": "Constraints",
+  "item": "Judges may judge from the video and description only",
+  "status": "Not started",
+  "detail": "Rules: judges are not required to test.",
+  "next": "Make the video and description carry the case."
+ },
+ {
+  "id": "N1",
+  "group": "Non-functional",
+  "item": "No secrets in the repo",
+  "status": "Partly done",
+  "detail": "Gitleaks hook installed and CI scan written; custom rules for PayPal client ID and secret catch a fake secret.",
+  "next": "Turn on push protection once the GitHub repo exists."
+ },
+ {
+  "id": "N2",
+  "group": "Non-functional",
+  "item": "Sandbox only",
+  "status": "Done",
+  "detail": "src/config.js refuses any PAYPAL_ENV other than sandbox; covered by a test.",
+  "next": ""
+ },
+ {
+  "id": "N3",
+  "group": "Non-functional",
+  "item": "Only trust real PayPal events",
+  "status": "Partly done",
+  "detail": "Signatures checked with PayPal using the raw body; unverified events logged as unverified; duplicates ignored. Tested offline.",
+  "next": "Confirm with a real sandbox event (M3)."
+ },
+ {
+  "id": "N4",
+  "group": "Non-functional",
+  "item": "Nothing reaches a client without approval",
+  "status": "Not started",
+  "detail": "Server-enforced: create, send and remind run only after an approval call; one decision per draft; every decision recorded.",
+  "next": "Test that send without approval is refused."
+ },
+ {
+  "id": "N5",
+  "group": "Non-functional",
+  "item": "A judge can run it from the README",
+  "status": "Not started",
+  "detail": "Fresh clone, npm install, seed, working ledger in about 15 minutes; no database or Docker to install; Node 22 LTS or newer.",
+  "next": "Time a fresh-clone run before submitting."
+ },
+ {
+  "id": "N6",
+  "group": "Non-functional",
+  "item": "Demo stays up and free until judging ends",
+  "status": "Not started",
+  "detail": "Render URL up 1-15 Dec; smoke test on 1 Dec; no paywall.",
+  "next": "Pick a Render plan that does not sleep."
+ },
+ {
+  "id": "N7",
+  "group": "Non-functional",
+  "item": "Repeatable demo",
+  "status": "Not started",
+  "detail": "The seed script resets the data to the same known state; webhook handling survives retries.",
+  "next": "Run seed twice and compare the ledger."
+ },
+ {
+  "id": "N8",
+  "group": "Non-functional",
+  "item": "Feels instant",
+  "status": "Not started",
+  "detail": "Ledger loads in under 1 s for about 500 payments; webhook answered with a 200 in under 2 s (AI tagging runs afterwards); invoice draft ready in under 10 s.",
+  "next": "Measure on the Render URL."
+ },
+ {
+  "id": "N9",
+  "group": "Non-functional",
+  "item": "Public demo can't run up bills",
+  "status": "Not started",
+  "detail": "Caps on model calls per day and per draft; spend within the monthly budget on the Bills tab (placeholder $25).",
+  "next": "Set the caps once the model is chosen."
+ },
+ {
+  "id": "N10",
+  "group": "Non-functional",
+  "item": "Synthetic data only",
+  "status": "Not started",
+  "detail": "Seed data uses made-up clients; no real personal data in the repo, video or demo; amounts labelled as examples.",
+  "next": "Review the seed file and the video before publishing."
+ },
+ {
+  "id": "N11",
+  "group": "Non-functional",
+  "item": "Information tool, not advice",
+  "status": "Not started",
+  "detail": "The tax figure is always labelled 'estimate, not tax advice'; the app never holds funds.",
+  "next": "Check every screen showing the figure."
+ },
+ {
+  "id": "N12",
+  "group": "Non-functional",
+  "item": "Usable by keyboard and in both themes",
+  "status": "Not started",
+  "detail": "Visible focus; status shown by text as well as colour; works at 400 px wide; light and dark.",
+  "next": "Check with keyboard only before recording."
+ },
+ {
+  "id": "N13",
+  "group": "Non-functional",
+  "item": "Tests on every push",
+  "status": "Partly done",
+  "detail": "11 offline node:test tests pass; CI runs them on Node 22 and 25.",
+  "next": "CI runs once the repo is pushed."
+ },
+ {
+  "id": "N14",
+  "group": "Non-functional",
+  "item": "Every component's licence reviewed",
+  "status": "Not started",
+  "detail": "Software assets tab kept up to date; Apache-2.0 LICENSE detected in About; AG Grid Community only.",
+  "next": "Update the register when dependencies change."
+ },
+ {
+  "id": "N15",
+  "group": "Non-functional",
+  "item": "Every action can be traced",
+  "status": "Not started",
+  "detail": "var/events.jsonl plus recorded decisions; the AI's reason shown on each draft.",
+  "next": "Show the reason on the draft card."
+ }
+]

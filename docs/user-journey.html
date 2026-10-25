@@ -1,0 +1,283 @@
+<title>Gig Money Journey</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@600&display=swap">
+<style>
+/* Layout: one reading column; the journey map is a wide table that scrolls on its own; diagrams below. Same tokens as the AI Workbench pages. */
+:root {
+  --bg: #f3f5f4; --panel: #ffffff; --ink: #18232b; --muted: #5b6a72; --line: #a9b6bb; --line-soft: #d8e0e2;
+  --built: #0f7a6c; --built-tint: #e2f2ef;
+  --gate: #b26a00; --gate-tint: #fbf0dd;
+  --bad: #b3261e; --bad-tint: #fbe7e5;
+  --display: "IBM Plex Sans Condensed", "Arial Narrow", sans-serif;
+  --body: "IBM Plex Sans", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #11181d; --panel: #18222a; --ink: #e3eaed; --muted: #94a5ad; --line: #4a5a62; --line-soft: #2a363d;
+  --built: #4cc3b1; --built-tint: #15302c; --gate: #f0a73c; --gate-tint: #33270f;
+  --bad: #f2867d; --bad-tint: #3a1c1a; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #11181d; --panel: #18222a; --ink: #e3eaed; --muted: #94a5ad; --line: #4a5a62; --line-soft: #2a363d;
+  --built: #4cc3b1; --built-tint: #15302c; --gate: #f0a73c; --gate-tint: #33270f;
+  --bad: #f2867d; --bad-tint: #3a1c1a; color-scheme: dark }
+
+body { background: var(--bg); color: var(--ink); font: 15px/1.55 var(--body); padding-inline: 16px; margin: 0; }
+main { max-width: 1180px; margin: 0 auto; padding-block: 32px 56px; display: grid; gap: 36px; }
+h1 { font: 600 2rem/1.15 var(--display); margin: 0; text-wrap: balance; letter-spacing: .01em; }
+h2 { font: 600 1.2rem/1.3 var(--display); margin: 0; letter-spacing: .02em; text-wrap: balance; }
+p { margin: 0; max-width: 68ch; }
+.lede { color: var(--muted); }
+header, section { display: grid; gap: 12px; min-width: 0; }
+.eyebrow { font: 500 12px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+code, .mono { font-family: var(--mono); font-size: .86em; }
+
+.persona { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+.persona > div { background: var(--panel); border: 1px solid var(--line-soft); border-radius: 6px; padding: 14px 16px; display: grid; gap: 4px; align-content: start; }
+.persona b { font: 600 12px var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+
+.scroll { overflow-x: auto; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; }
+table.map { border-collapse: collapse; width: 100%; min-width: 1080px; }
+.map th, .map td { text-align: left; vertical-align: top; padding: 12px 14px; border-bottom: 1px solid var(--line-soft); border-left: 1px solid var(--line-soft); font-size: 13.5px; }
+.map tr > :first-child { border-left: 0; width: 112px; font: 500 11.5px var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.map thead th { font: 600 14px var(--display); letter-spacing: .02em; border-bottom: 1px solid var(--line); }
+.map thead th .n { display: block; font: 500 11px var(--mono); color: var(--muted); letter-spacing: .06em; margin-bottom: 2px; }
+.map thead th.gate { background: var(--gate-tint); }
+.map td.gate { background: color-mix(in srgb, var(--gate-tint) 55%, transparent); }
+.map tr:last-child td, .map tr:last-child th { border-bottom: 0; }
+.map td code { display: inline-block; background: var(--bg); border-radius: 3px; padding: 0 4px; margin-block: 1px; }
+
+.feel { display: inline-flex; align-items: center; gap: 6px; font-weight: 500; }
+.dot { width: 9px; height: 9px; border-radius: 50%; flex: none; }
+.f-bad .dot { background: var(--bad); }
+.f-mid .dot { background: var(--gate); }
+.f-good .dot { background: var(--built); }
+
+.mood { display: block; width: 100%; height: 64px; }
+.mood path { fill: none; stroke: var(--built); stroke-width: 2; }
+.mood .base { stroke: var(--line-soft); stroke-width: 1; stroke-dasharray: 3 4; }
+.mood circle { stroke: var(--panel); stroke-width: 2; }
+
+.branches { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; }
+.branch { background: var(--panel); border: 1px solid var(--line-soft); border-radius: 6px; padding: 14px 16px; display: grid; gap: 6px; align-content: start; }
+.branch h3 { margin: 0; font: 600 15px var(--display); letter-spacing: .02em; display: flex; gap: 8px; align-items: center; }
+.branch.ok { border-left: 3px solid var(--built); }
+.branch.no { border-left: 3px solid var(--bad); }
+.branch.guard { border-left: 3px solid var(--gate); }
+
+.diagram { overflow-x: auto; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 16px; }
+.diagram pre.mermaid { margin: 0; min-width: 640px; font-family: var(--body); background: transparent; }
+.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; }
+.grid2 > section { min-width: 0; }
+.note { font-size: 13px; color: var(--muted); }
+.planned { display: inline-block; font: 500 10.5px var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--gate); border: 1px solid var(--gate); border-radius: 999px; padding: 0 6px; vertical-align: 1px; }
+.map tr.pp th, .map tr.pp td { background: color-mix(in srgb, var(--built-tint) 45%, transparent); }
+.map tr.pp td.gate { background: color-mix(in srgb, var(--gate-tint) 55%, transparent); }
+.legend { display: flex; flex-wrap: wrap; gap: 8px 16px; font-size: 13px; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend i { width: 12px; height: 12px; border-radius: 2px; display: inline-block; }
+.card-mock { background: var(--bg); border: 1px dashed var(--line); border-radius: 6px; padding: 12px 14px; display: grid; gap: 4px; font-size: 13.5px; }
+.card-mock .row { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.card-mock .k { color: var(--muted); font: 500 11.5px var(--mono); letter-spacing: .06em; text-transform: uppercase; }
+.card-mock .v { font-variant-numeric: tabular-nums; }
+.btns { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
+.btns span { font: 600 13px var(--body); padding: 4px 12px; border-radius: 4px; border: 1px solid var(--line); }
+.btns .go { background: var(--built); color: var(--panel); border-color: var(--built); }
+</style>
+<main>
+  <header>
+    <span class="eyebrow">PayPal AI Hackathon 2026 · built on the PayPal sandbox</span>
+    <h1>Gig money journey</h1>
+    <p class="lede">What a month looks like for someone paid through PayPal by several apps and clients, with an assistant that keeps the ledger, puts tax aside and chases what they're owed. Nothing goes out to a client until they approve it. Amounts and clients on this page are examples.</p>
+    <div class="legend" aria-label="Legend">
+      <span><i style="background:var(--built-tint);border:1px solid var(--built)"></i>PayPal row: the API or webhook doing the work</span>
+      <span><i style="background:var(--gate-tint);border:1px solid var(--gate)"></i>Approval gate</span>
+      <span><span class="planned">planned</span> not built yet</span>
+    </div>
+  </header>
+
+  <section aria-labelledby="who">
+    <h2 id="who">Who it's for</h2>
+    <div class="persona">
+      <div><b>Worker</b><span>A multi-app freelancer in the North of England: delivery shifts, a small craft shop and the odd photography job. All of it lands in one PayPal business account.</span></div>
+      <div><b>Situation</b><span>Forty payments a month from five sources. No idea what was earned this quarter, how much belongs to HMRC, or which client still owes for last month.</span></div>
+      <div><b>What they need</b><span>One clear number they can spend, tax set aside before it's spent, and invoices that go out and get paid without an evening of admin.</span></div>
+    </div>
+  </section>
+
+  <section aria-labelledby="map">
+    <h2 id="map">Journey map</h2>
+    <p class="note">Stages run left to right in the order they happen. The shaded column is the approval gate, where the assistant stops and waits. The green row shows which part of PayPal does the work at each stage.</p>
+    <div class="scroll" role="region" aria-label="Journey map, scrolls sideways" tabindex="0">
+      <table class="map">
+        <thead>
+          <tr>
+            <th scope="col">Stage</th>
+            <th scope="col"><span class="n">1</span>Get paid</th>
+            <th scope="col"><span class="n">2</span>See it land</th>
+            <th scope="col"><span class="n">3</span>Know what's yours</th>
+            <th scope="col"><span class="n">4</span>Ask for an invoice</th>
+            <th scope="col" class="gate"><span class="n">5</span>Approve before send</th>
+            <th scope="col"><span class="n">6</span>Chase a late payer</th>
+            <th scope="col"><span class="n">7</span>Month end</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th scope="row">Worker does</th>
+            <td>Finishes a shift, sells a print, delivers a photo set.</td>
+            <td>Opens the app. Nothing to type in.</td>
+            <td>Checks the "safe to spend" figure before buying something.</td>
+            <td>Types <code>invoice Northside Café £120 for Saturday's shoot, due in 14 days</code>.</td>
+            <td class="gate">Reads the draft. Approves, edits the amount, or rejects it.</td>
+            <td>Sees a nudge that an invoice is 5 days overdue.</td>
+            <td>Downloads the month's summary for their records.</td>
+          </tr>
+          <tr class="pp">
+            <th scope="row">PayPal does</th>
+            <td>Captures the payment: <code>Orders v2</code> create and capture (seeded in the sandbox for the demo).</td>
+            <td>Sends <code>PAYMENT.CAPTURE.COMPLETED</code> by webhook; the signature is checked with <code>verify-webhook-signature</code>.</td>
+            <td>Is the source of truth for every amount and fee in the ledger.</td>
+            <td>Nothing yet: the draft is local.</td>
+            <td class="gate"><code>Invoicing v2</code> create, then send, only after approval.</td>
+            <td><code>Invoicing v2</code> remind; <code>INVOICING.INVOICE.PAID</code> arrives by webhook when the client pays.</td>
+            <td>Transaction history to cross-check the ledger <span class="planned">planned</span></td>
+          </tr>
+          <tr>
+            <th scope="row">Assistant does</th>
+            <td>—</td>
+            <td>Adds the payment to the ledger and tags its source (delivery app, shop, client) from the payer and note.</td>
+            <td>Keeps a running tax set-aside estimate and shows what's left to spend.</td>
+            <td>Turns the sentence into a draft invoice through the PayPal Agent Toolkit, matching the client from past payments.</td>
+            <td class="gate">Stops. Nothing goes to the client until the worker approves.</td>
+            <td>Drafts a polite reminder and suggests sending it; it's sent only on approval.</td>
+            <td>Writes a plain-language summary: earned, set aside, owed, paid late.</td>
+          </tr>
+          <tr>
+            <th scope="row">Worker sees</th>
+            <td>The usual PayPal notification.</td>
+            <td><code>+£38.50 · Delivery app · Tue 3 Nov</code> in the ledger grid.</td>
+            <td><code>This month £1,240 · set aside £310 · safe to spend £930</code><br><span class="note">Estimate, not tax advice.</span></td>
+            <td>A draft card: client, amount, due date, and why it was matched.</td>
+            <td class="gate"><code>Sent INV-0042 to Northside Café</code></td>
+            <td><code>INV-0039 · £85 · 5 days overdue</code> → <code>Paid</code></td>
+            <td>Income by source, tax pot, invoices paid on time vs late.</td>
+          </tr>
+          <tr>
+            <th scope="row">Feels</th>
+            <td><span class="feel f-mid"><span class="dot"></span>Busy</span></td>
+            <td><span class="feel f-mid"><span class="dot"></span>Relieved</span></td>
+            <td><span class="feel f-good"><span class="dot"></span>Clear</span></td>
+            <td><span class="feel f-good"><span class="dot"></span>Quick</span></td>
+            <td class="gate"><span class="feel f-good"><span class="dot"></span>In control</span></td>
+            <td><span class="feel f-good"><span class="dot"></span>Backed up</span></td>
+            <td><span class="feel f-good"><span class="dot"></span>Ready</span></td>
+          </tr>
+          <tr>
+            <th scope="row">Without the app</th>
+            <td>Payments pile up in PayPal next to refunds and transfers.</td>
+            <td>Scrolls the activity list and copies amounts into a spreadsheet, when they remember.</td>
+            <td>Spends it all, then gets a tax bill in January they hadn't saved for.</td>
+            <td>Builds an invoice by hand in PayPal or a template, late at night.</td>
+            <td class="gate">An auto-send tool would email the client with no check.</td>
+            <td>Doesn't chase, because it's awkward. The money arrives late or never.</td>
+            <td>Sorts a year of payments by hand before Self Assessment.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <svg class="mood" viewBox="0 0 1000 64" preserveAspectRatio="none" role="img" aria-label="Confidence rises from busy at stage 1 to ready at stage 7">
+      <line class="base" x1="0" y1="32" x2="1000" y2="32"/>
+      <path d="M 71 46 C 140 42, 180 38, 214 36 S 320 22, 357 20 S 460 16, 500 16 S 600 12, 643 12 S 750 10, 786 10 S 890 8, 929 8"/>
+      <circle cx="71" cy="46" r="5" fill="var(--gate)"/>
+      <circle cx="214" cy="36" r="5" fill="var(--gate)"/>
+      <circle cx="357" cy="20" r="5" fill="var(--built)"/>
+      <circle cx="500" cy="16" r="5" fill="var(--built)"/>
+      <circle cx="643" cy="12" r="5" fill="var(--built)"/>
+      <circle cx="786" cy="10" r="5" fill="var(--built)"/>
+      <circle cx="929" cy="8" r="5" fill="var(--built)"/>
+    </svg>
+  </section>
+
+  <section aria-labelledby="gate">
+    <h2 id="gate">At the approval gate</h2>
+    <div class="grid2">
+      <div class="card-mock" aria-label="Example draft invoice card">
+        <span class="k">Draft invoice · example</span>
+        <div class="row"><span>Northside Café</span><span class="v">£120.00</span></div>
+        <div class="row"><span class="note">Saturday's shoot · due Sat 21 Nov</span><span class="note">14 days</span></div>
+        <div class="row"><span class="note">Matched from 2 past payments by this payer</span></div>
+        <div class="btns" aria-hidden="true"><span class="go">Approve and send</span><span>Edit</span><span>Reject</span></div>
+      </div>
+      <div class="branches">
+        <div class="branch ok">
+          <h3><span class="dot" style="background:var(--built)"></span>Approve</h3>
+          <p>The invoice is created and sent through PayPal Invoicing. It shows as <em>sent</em> and turns <em>paid</em> when the webhook arrives.</p>
+        </div>
+        <div class="branch no">
+          <h3><span class="dot" style="background:var(--bad)"></span>Edit or reject</h3>
+          <p>Nothing reaches the client. An edit returns to the draft; a rejection is logged with the reason.</p>
+        </div>
+        <div class="branch guard">
+          <h3><span class="dot" style="background:var(--gate)"></span>Guardrails</h3>
+          <p>Sandbox only. The assistant can draft and suggest, but every call that contacts a client needs a click. The tax figure is always labelled an estimate.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="grid2">
+    <section aria-labelledby="seq">
+      <h2 id="seq">How money and invoices flow</h2>
+      <div class="diagram">
+<pre class="mermaid">
+sequenceDiagram
+    actor W as Worker
+    participant App as Assistant app
+    participant AI as Model + Agent Toolkit
+    participant PP as PayPal sandbox
+    PP->>App: PAYMENT.CAPTURE.COMPLETED (webhook)
+    App->>PP: verify-webhook-signature
+    App->>AI: payer, amount, note
+    AI-->>App: source tag
+    App-->>W: ledger row + safe to spend
+    W->>App: "invoice Northside Café £120..."
+    App->>AI: request + past payers
+    AI-->>App: draft invoice
+    App-->>W: draft card
+    alt approve
+        W->>App: approve
+        App->>PP: create + send invoice
+        PP->>App: INVOICING.INVOICE.PAID (webhook)
+        App-->>W: marked paid
+    else edit or reject
+        W->>App: change or reason
+        App-->>W: nothing sent
+    end
+</pre>
+      </div>
+    </section>
+    <section aria-labelledby="states">
+      <h2 id="states">Invoice states</h2>
+      <div class="diagram">
+<pre class="mermaid">
+stateDiagram-v2
+    [*] --> draft: worker asks
+    draft --> awaiting_approval: draft card shown
+    awaiting_approval --> draft: edit
+    awaiting_approval --> rejected: reject
+    awaiting_approval --> sent: approve
+    sent --> overdue: past due date
+    overdue --> sent: reminder approved
+    sent --> paid: INVOICING.INVOICE.PAID
+    overdue --> paid: INVOICING.INVOICE.PAID
+    sent --> cancelled: worker cancels
+    paid --> [*]
+    rejected --> [*]
+    cancelled --> [*]
+</pre>
+      </div>
+      <p class="note">Everything on this page is the plan as of 24 Oct 2026. Nothing is built yet; the first milestone is a verified sandbox webhook by 3 Nov. For the demo, a seed script creates sandbox payments between the two sandbox accounts, so judges see a full ledger without real data.</p>
+    </section>
+  </div>
+</main>

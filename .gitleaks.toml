@@ -1,0 +1,21 @@
+# Gitleaks rules for this repo: the defaults plus formats the defaults miss.
+# Run: gitleaks git --redact --config .gitleaks.toml .
+title = "gig-money"
+
+[extend]
+useDefault = true
+
+# PayPal REST client secrets are 80 characters of letters, digits, - and _.
+[[rules]]
+id = "paypal-client-secret-assignment"
+description = "A value assigned to PAYPAL_CLIENT_SECRET"
+regex = '''PAYPAL_CLIENT_SECRET\s*[=:]\s*['"]?[A-Za-z0-9_-]{20,}'''
+
+[[rules]]
+id = "paypal-client-id-assignment"
+description = "A value assigned to PAYPAL_CLIENT_ID"
+regex = '''PAYPAL_CLIENT_ID\s*[=:]\s*['"]?[A-Za-z0-9_-]{20,}'''
+
+[allowlist]
+description = "Documented placeholders and test fixtures"
+paths = ['''\.env\.example$''']

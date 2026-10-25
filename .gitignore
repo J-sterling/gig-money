@@ -1,0 +1,20 @@
+# Secrets - never commit
+.env
+.env.*
+!.env.example
+
+# Node
+node_modules/
+coverage/
+
+# OS / editors
+.DS_Store
+.idea/
+.vscode/
+
+# Local AI-assistant notes and agents, kept out of the public repo
+CLAUDE.md
+.claude/
+
+# Events and ledger written by the app
+var/
