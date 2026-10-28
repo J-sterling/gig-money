@@ -1,0 +1,92 @@
+# Copy the demo's secrets from the Ansible vault into Render, then redeploy.
+# Values go from the vault (decrypted in memory) to Render's API over HTTPS;
+# nothing is printed or written to disk. Safe to run again after a key changes.
+#
+#   ansible-playbook ansible/render-env.yml --ask-vault-pass -e dry_run=true   # lists the keys, sends nothing
+#   ansible-playbook ansible/render-env.yml --ask-vault-pass                   # sets them and redeploys
+#   ansible-playbook ansible/render-env.yml --ask-vault-pass -e only=PAYPAL_WEBHOOK_ID
+#
+# Other vault: -e vault_file=path/to/vault.yml. Other service: -e service=name.
+- name: Render settings from the vault
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars:
+    vault_file: "{{ lookup('env', 'HOME') }}/Documents/ansible/group_vars/all/vault.yml"
+    service: gig-money
+    dry_run: false
+    only: ""
+    api: https://api.render.com/v1
+    # Render setting -> vault variable name.
+    from_vault:
+      PAYPAL_CLIENT_ID: paypal_sandbox_client_id  # gitleaks:allow (a vault name, not a value)
+      PAYPAL_CLIENT_SECRET: paypal_sandbox_client_secret  # gitleaks:allow (a vault name, not a value)
+      OPENROUTER_API_KEY: openrouter_api_key
+      DEMO_PASSWORD: demo_password  # gitleaks:allow (a vault name, not a value)
+      PAYPAL_WEBHOOK_ID: paypal_webhook_id
+    wanted: "{{ from_vault if only == '' else from_vault | dict2items | selectattr('key', 'in', only.split(',')) | items2dict }}"
+  tasks:
+    - name: Load the vault
+      ansible.builtin.include_vars:
+        file: "{{ vault_file }}"
+      no_log: true
+
+    - name: Check the vault has every value needed
+      ansible.builtin.assert:
+        that: (missing | length) == 0 and render_api_key is defined
+        fail_msg: "Not in the vault: {{ (missing + ([] if render_api_key is defined else ['render_api_key'])) | join(', ') }}"
+        quiet: true
+      vars:
+        # The webhook ID is optional on a full run, since it only exists after the
+        # first deploy; anything named in `only` is required.
+        required: "{{ only.split(',') if only != '' else from_vault.keys() | reject('eq', 'PAYPAL_WEBHOOK_ID') | list }}"
+        missing: "{{ wanted | dict2items | selectattr('key', 'in', required) | rejectattr('value', 'in', vars) | map(attribute='value') | list }}"
+
+    - name: Settings to send
+      ansible.builtin.set_fact:
+        to_send: "{{ wanted | dict2items | selectattr('value', 'in', vars) | map(attribute='key') | list }}"
+
+    - name: Find the service
+      ansible.builtin.uri:
+        url: "{{ api }}/services?name={{ service }}&limit=1"
+        headers: { Authorization: "Bearer {{ render_api_key }}", Accept: application/json }
+      register: found
+      check_mode: false
+      no_log: true
+
+    - name: Stop if there is no service
+      ansible.builtin.assert:
+        that: found.json | length > 0
+        fail_msg: "No Render service named {{ service }}. Create it from render.yaml first (New -> Blueprint)."
+        quiet: true
+
+    - name: What will change
+      ansible.builtin.debug:
+        msg: "{{ 'Would set' if dry_run | bool else 'Setting' }} {{ to_send | join(', ') }} on {{ service }} ({{ found.json[0].service.id }}), then {{ 'not deploy' if dry_run | bool else 'redeploy' }}."
+
+    - name: Set each value in Render
+      ansible.builtin.uri:
+        url: "{{ api }}/services/{{ found.json[0].service.id }}/env-vars/{{ item }}"
+        method: PUT
+        headers: { Authorization: "Bearer {{ render_api_key }}", Accept: application/json }
+        body_format: json
+        body: { value: "{{ lookup('vars', from_vault[item]) }}" }
+      loop: "{{ to_send }}"
+      when: not dry_run | bool
+      no_log: true
+
+    - name: Redeploy so the service picks them up
+      ansible.builtin.uri:
+        url: "{{ api }}/services/{{ found.json[0].service.id }}/deploys"
+        method: POST
+        headers: { Authorization: "Bearer {{ render_api_key }}", Accept: application/json }
+        body_format: json
+        body: {}
+        status_code: [200, 201, 202]
+      when: not dry_run | bool and to_send | length > 0
+      no_log: true
+
+    - name: Done
+      ansible.builtin.debug:
+        msg: "Deploy started. Check with: scripts/render.sh status"
+      when: not dry_run | bool and to_send | length > 0

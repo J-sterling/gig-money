@@ -70,9 +70,9 @@ Free models have daily limits, and the app adds its own cap (`MODEL_DAILY_LIMIT`
 
 ## Deploy (Render)
 
-`render.yaml` is a Render Blueprint: **New → Blueprint**, pick this repo, and type the secrets when asked. They're marked `sync: false`, so none are in the repo. It runs one Starter web service with a 1 GB disk at `/var/data` (`DATA_DIR`) for the SQLite ledger and event log. Then:
+`render.yaml` is a Render Blueprint: **New → Blueprint**, pick this repo, and either type the secrets when asked or leave them blank and copy them from an Ansible vault with `ansible-playbook ansible/render-env.yml --ask-vault-pass` (`-e dry_run=true` lists what it would set). They're marked `sync: false`, so none are in the repo. It runs one Starter web service with a 1 GB disk at `/var/data` (`DATA_DIR`) for the SQLite ledger and event log. Then:
 
-1. `npm run webhook:register -- https://<your-service>.onrender.com`, put the ID in Render as `PAYPAL_WEBHOOK_ID`, and redeploy.
+1. `npm run webhook:register -- https://<your-service>.onrender.com`, put the ID in Render as `PAYPAL_WEBHOOK_ID` (or in the vault as `paypal_webhook_id`, then run the playbook with `-e only=PAYPAL_WEBHOOK_ID`), and redeploy.
 2. `scripts/render.sh suspend|resume|status|deploy` stops and starts it (needs `RENDER_API_KEY`). A suspended service isn't billed for compute, and its disk keeps the data.
 3. `.github/workflows/health.yml` checks the demo daily from 11 Nov to 15 Dec. It needs repo variable `DEMO_URL` and repo secret `DEMO_PASSWORD`.
 
