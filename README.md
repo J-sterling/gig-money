@@ -6,7 +6,7 @@ A PayPal money assistant for gig workers. Payments arrive from PayPal by webhook
 
 > Built for the PayPal AI Hackathon 2026. Runs against the **PayPal sandbox only**; no real money moves.
 
-**Status (2 Nov 2026):** a working web app at `/`: a ledger with a separate demo workspace per visitor, "Get paid" through PayPal Orders, AI invoice drafts, and an approval gate. Approved drafts go out through PayPal Invoicing, and paying the invoice adds the income to the ledger. New payments are tagged by source by the AI, using your own past payments as examples (keyword rules take over if the model is unavailable), and sent invoices can get an AI-drafted reminder that also waits for approval. The hosted demo is live on Render behind a password, with rate limits and a daily health check.
+**Status (2 Nov 2026):** a working web app at `/`: a ledger with a separate demo workspace per visitor, "Get paid" through PayPal Orders, AI invoice drafts, and an approval gate. Approved drafts go out through PayPal Invoicing, and paying the invoice adds the income to the ledger. New payments are tagged by source by the AI, using your own past payments as examples (keyword rules take over if the model is unavailable), and sent invoices can get an AI-drafted reminder that also waits for approval. The hosted demo is live on Render behind a password, with rate limits and a daily health check, and payment tagging runs as a Render Workflow whose steps show in the Render dashboard.
 
 ## For judges
 
@@ -68,15 +68,27 @@ The AI runs on [OpenRouter](https://openrouter.ai)'s free tier, so it runs on Op
 
 Free models have daily limits, and the app adds its own cap (`MODEL_DAILY_LIMIT`, default 40 calls a day). Free endpoints also queue: on 25 Oct one draft took 1.4 s and another 60 s. The app gives up after `MODEL_TIMEOUT_MS` (20 s) and reasoning is off (`MODEL_REASONING=none`), which is enough for drafting. Free endpoints may log prompts, so use only made-up data.
 
+## How we use Render
+
+The hosted demo is two Render services from one Blueprint (`render.yaml`):
+
+- **Web service** (Starter, Frankfurt): the Express app, with a 1 GB disk at `/var/data` for the SQLite ledger, event log and daily model-call count. `/health` is Render's health check; every other page needs the demo password except the PayPal webhook, which only trusts events PayPal's signature check confirms.
+- **Render Workflow** `gig-money-workflows` (`src/tasks/tag-payment.js`): tags where each new payment came from. A run of `tagPayment` calls a `classifyWithModel` step, and a `classifyWithRules` step only if the model fails, so every tag's path is visible in the Render dashboard. The ledger row shows the run id (`· Render run trn-…`).
+
+Why a Workflow: it keeps the model call off the web service and makes each tag's steps visible and auditable. It is not faster (tagging already runs after PayPal gets its reply) and the ledger stays on the web service. The web service counts each run against the daily model cap before starting it, sends only the payment's payer, note and amount, and falls back to keyword rules if a run fails or takes over 60 s. The workflow has no disk and no PayPal or Render secrets. Payer names and notes from the sandbox appear in run inputs in the dashboard.
+
+Without `RENDER_TAG_TASK` and `RENDER_WORKFLOW_API_KEY` set (as when you run it locally), tagging runs in-process exactly the same way.
+
 ## Deploy (Render)
 
-`render.yaml` is a Render Blueprint: **New → Blueprint**, pick this repo, and either type the secrets when asked or leave them blank and copy them from an Ansible vault with `ansible-playbook ansible/render-env.yml --ask-vault-pass` (`-e dry_run=true` lists what it would set). They're marked `sync: false`, so none are in the repo. It runs one Starter web service with a 1 GB disk at `/var/data` (`DATA_DIR`) for the SQLite ledger and event log. Then:
+`render.yaml` is a Render Blueprint: **New → Blueprint**, pick this repo, and either type the secrets when asked or leave them blank and copy them from an Ansible vault with `ansible-playbook ansible/render-env.yml --ask-vault-pass` (`-e dry_run=true` lists what it would set). They're marked `sync: false`, so none are in the repo. The playbook also puts the model key in env group `gig-money-model`, which the workflow reads (Render's API can't change a workflow's own env vars), and deploys a new workflow version. Then:
 
 1. `npm run webhook:register -- https://<your-service>.onrender.com`, put the ID in Render as `PAYPAL_WEBHOOK_ID` (or in the vault as `paypal_webhook_id`, then run the playbook with `-e only=PAYPAL_WEBHOOK_ID`), and redeploy.
-2. `scripts/render.sh suspend|resume|status|deploy` stops and starts it (needs `RENDER_API_KEY`). A suspended service isn't billed for compute, and its disk keeps the data.
-3. `.github/workflows/health.yml` checks the demo daily from 11 Nov to 15 Dec. It needs repo variable `DEMO_URL` and repo secret `DEMO_PASSWORD`.
+2. For workflow tagging, create a dedicated Render API key, put it in the vault as `render_workflow_api_key` and run the playbook. Render keys can't yet be scoped to one service, so keep nothing else in that Render account and revoke the key when the demo ends.
+3. `scripts/render.sh suspend|resume|status|deploy` stops and starts the web service (needs `RENDER_API_KEY`). A suspended service isn't billed for compute, and its disk keeps the data.
+4. `.github/workflows/health.yml` checks the demo daily until 15 Dec: `/health`, the password, the last tag (it fails if the model or workflow stopped answering) and one real draft. It needs repo variable `DEMO_URL` and repo secret `DEMO_PASSWORD`.
 
-With `DEMO_PASSWORD` set, every page needs it except `/health` and `/webhooks/paypal`. PayPal can't send a password, and that route only trusts events whose signature PayPal confirms.
+To try the tasks locally: `render workflows dev -- node src/tasks/tag-payment.js` (Render CLI 2.12+), then `render workflows tasks list --local`.
 
 ## Development
 

@@ -135,7 +135,7 @@ footer { color: var(--muted); font-size: 13px; }
       <rect class="built" x="320" y="176" width="420" height="64" rx="4"/>
       <text class="n built-c" x="334" y="202">2</text>
       <text class="t" x="354" y="202">Add to the visitor's ledger</text>
-      <text class="s" x="354" y="224">routed by custom_id · AI tags the source</text>
+      <text class="s" x="354" y="224">routed by custom_id · AI tags the source in a Render Workflow</text>
 
       <rect class="built" x="320" y="262" width="420" height="64" rx="4"/>
       <text class="n built-c" x="334" y="288">3</text>
@@ -188,6 +188,11 @@ footer { color: var(--muted); font-size: 13px; }
       <path class="halo" d="M796 462 V482"/>
       <path class="wire" d="M740 482 H796 V296 H832" marker-end="url(#a)"/>
       <text class="lbl" x="768" y="526">send after approval</text>
+      <!-- Render Workflow: tagging runs here on the demo -->
+      <rect class="built" x="900" y="522" width="200" height="56" rx="4"/>
+      <text class="t" x="912" y="546">Render Workflow</text>
+      <text class="m" x="912" y="566">tag: model step, then rules</text>
+      <path class="wire" d="M1000 522 V508" marker-end="url(#a)"/>
 
       <!-- storage -->
       <rect class="frame" x="300" y="590" width="800" height="150" rx="6"/>
@@ -238,9 +243,10 @@ footer { color: var(--muted); font-size: 13px; }
         <li>Invoice drafts from Nemotron 3.5 Super (free): 1.4–60 s on the free tier, so calls stop after 20 s <span class="tag built">built</span></li>
         <li>Approval screen, PayPal Invoicing and saved fallback draft: a real invoice drafted, approved, sent and paid in the browser <span class="tag built">built</span></li>
         <li>AI source tags grounded in your own past payments, with a keyword fallback; AI reminders behind the same gate <span class="tag built">built</span></li>
-        <li>AG Grid ledger <span class="tag later">sponsor prize, optional</span></li>
+        <li>AG Grid: skipped for the Render prize (only one sponsor prize can be won) <span class="tag later">skipped</span></li>
         <li>Render deploy prepared: Blueprint, password gate, limits, daily health check, secrets copied from the vault by an Ansible playbook <span class="tag built">built</span></li>
         <li>Live on Render: a sandbox payment, an AI invoice and its payment went end to end, with every PayPal webhook verified <span class="tag built">built</span></li>
+        <li>Payment tagging runs as a Render Workflow: a model step, then a rules step only if the model fails, each visible in the Render dashboard; the ledger row shows the run id. Live: about 5 s from payment to tag <span class="tag built">built</span></li>
         <li>README, video <span class="tag planned">8 Nov</span></li>
         <li>PayPal Agent Toolkit: left out for now (it pulls in 12 known vulnerabilities) <span class="tag later">revisit</span></li>
       </ul>

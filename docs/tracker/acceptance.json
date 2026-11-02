@@ -349,10 +349,10 @@
  {
   "id": "B3",
   "group": "Prizes",
-  "item": "Best Use of AG Grid (sponsor, $5k / $2k / 3x $1k)",
+  "item": "Best Use of AG Grid (sponsor, $5k / $2k / 3x $1k), skipped",
   "status": "Not started",
-  "detail": "Biggest sponsor prize. The income ledger is a natural grid.",
-  "next": "Build the ledger with AG Grid Community.",
+  "detail": "The prize is for AG Studio dashboards plus the Studio Agent Framework (React), about 14-19 h, and only one sponsor prize can be won. An EGM review on 2 Nov chose Render instead.",
+  "next": "None: skipped for Render (B4); only one sponsor prize can be won.",
   "order": 22,
   "owner": "Claude",
   "effort": "half a day",
@@ -361,10 +361,10 @@
  {
   "id": "B4",
   "group": "Prizes",
-  "item": "Best Use of Render (sponsor, credits)",
-  "status": "Not started",
-  "detail": "Hosting for the demo and a stable webhook URL.",
-  "next": "Only one sponsor prize can be won; AG Grid is worth more.",
+  "item": "Best Use of Render (sponsor, $1,000 / $750 / $500 in credits)",
+  "status": "Done",
+  "detail": "Entered (2 Nov). Two Render services from one Blueprint: the web service with a disk for the SQLite ledger and a health check, and a Render Workflow (gig-money-workflows) that tags each new payment: tagPayment runs a classifyWithModel step, then classifyWithRules only if the model fails, each visible in the dashboard; the ledger row shows the run id. Secrets come from the vault by playbook; the model key is in env group gig-money-model. Live check 2 Nov: a sandbox payment was tagged by the model through the Workflow about 5 s after capture. SDK note: run.get() never returned against the live API, so the app polls the run status.",
+  "next": "Show a run in the video; dashboard screenshot in the README. Revoke the dedicated Render API key (gig-money-workflow-demo) on 16 Dec.",
   "order": 23,
   "owner": "Claude",
   "effort": "2 h",
@@ -448,7 +448,7 @@
   "item": "Feels instant",
   "status": "Partly done",
   "detail": "Draft time with reasoning off: 1.4 s and 4.1 s, but one free-tier request queued 60 s. A 20 s time limit plus a saved fallback draft (N17) keeps the demo responsive.",
-  "next": "Build the saved fallback; measure again on Render."
+  "next": "Measure again on Render: tagging took about 5 s through the Workflow on 2 Nov; time an invoice draft there."
  },
  {
   "id": "N9",
@@ -526,8 +526,8 @@
   "id": "N18",
   "group": "Non-functional",
   "item": "Daily health check until 15 Dec",
-  "status": "Partly done",
-  "detail": "Scheduled GitHub Actions job (07:17 UTC daily, 11 Nov-15 Dec) checks /health and that the password is enforced on the Render URL; on Mondays it also makes one real model draft and warns if the saved example appears. Can be run early with force.",
-  "next": "Passed on 2 Nov against the live URL (forced run, real model draft). Still only warns when the model is down, and the model call is Mondays only from 11 Nov: make a saved-example draft fail the job and check the model daily."
+  "status": "Done",
+  "detail": "Scheduled GitHub Actions job (07:17 UTC daily, 2 Nov-15 Dec) checks /health, that the password is enforced, how the last payment was tagged, and one real model draft. It fails (and emails) if the draft is the saved example or the last tag fell back to rules.",
+  "next": "Passed on 2 Nov against the live URL with a model tag through the Render Workflow."
  }
 ]
