@@ -527,7 +527,7 @@
   "group": "Non-functional",
   "item": "Daily health check until 15 Dec",
   "status": "Partly done",
-  "detail": "Scheduled GitHub Actions job checks /health and a dry-run draft on the Render URL.",
+  "detail": "Scheduled GitHub Actions job (07:17 UTC daily, 11 Nov-15 Dec) checks /health and that the password is enforced on the Render URL; on Mondays it also makes one real model draft and warns if the saved example appears. Can be run early with force.",
   "next": "The workflow (.github/workflows/health.yml) is written; point it at the Render URL once the service is live."
  }
 ]
