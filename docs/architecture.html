@@ -75,7 +75,7 @@ footer { color: var(--muted); font-size: 13px; }
   </header>
 
   <div class="legend" aria-label="Legend">
-    <span><i class="sw built"></i>Built and tested (25 Oct)</span>
+    <span><i class="sw built"></i>Built and tested (2 Nov)</span>
     <span><i class="sw planned"></i>Planned for the submission (12 Nov)</span>
     <span><i class="sw later"></i>Optional or after 12 Nov</span>
   </div>
@@ -101,7 +101,7 @@ footer { color: var(--muted); font-size: 13px; }
 
       <rect class="planned" x="20" y="176" width="220" height="64" rx="4"/>
       <text class="t" x="34" y="202">Render web service</text>
-      <text class="m" x="34" y="224">public HTTPS for judges</text>
+      <text class="m" x="34" y="224">Blueprint ready; live by 5 Nov</text>
 
       <!-- worker -->
       <rect class="built" x="20" y="262" width="220" height="236" rx="4"/>
@@ -230,7 +230,7 @@ footer { color: var(--muted); font-size: 13px; }
       </ol>
     </section>
     <section>
-      <h2>Status on 25 October</h2>
+      <h2>Status on 2 November</h2>
       <ul>
         <li>Sandbox app, OAuth token, credential check <span class="tag built">built</span></li>
         <li>Webhooks registered and verified: real sandbox events over Tailscale Funnel <span class="tag built">built</span></li>
@@ -239,7 +239,8 @@ footer { color: var(--muted); font-size: 13px; }
         <li>Approval screen, PayPal Invoicing and saved fallback draft: a real invoice drafted, approved, sent and paid in the browser <span class="tag built">built</span></li>
         <li>AI source tags grounded in your own past payments, with a keyword fallback; AI reminders behind the same gate <span class="tag built">built</span></li>
         <li>AG Grid ledger <span class="tag later">sponsor prize, optional</span></li>
-        <li>Render deploy, password, daily health check <span class="tag planned">5 Nov</span></li>
+        <li>Render deploy prepared: Blueprint, password gate, limits, daily health check, secrets copied from the vault by an Ansible playbook <span class="tag built">built</span></li>
+        <li>Render service live with a judge URL <span class="tag planned">5 Nov</span></li>
         <li>README, video <span class="tag planned">8 Nov</span></li>
         <li>PayPal Agent Toolkit: left out for now (it pulls in 12 known vulnerabilities) <span class="tag later">revisit</span></li>
       </ul>
@@ -254,7 +255,7 @@ footer { color: var(--muted); font-size: 13px; }
         <li><b>Feels instant.</b> Webhook answered in under 2 s with AI tagging done afterwards; ledger loads in under 1 s; an invoice draft in under 10 s.</li>
         <li><b>Can't run up bills.</b> Daily and per-draft caps on model calls, inside the monthly budget.</li>
       </ul>
-      <p style="margin:0;color:var(--muted);font-size:13px">The full list of 15 is in the hackathon tracker.</p>
+      <p style="margin:0;color:var(--muted);font-size:13px">The full list of 18 is in the hackathon tracker.</p>
     </section>
   </div>
 

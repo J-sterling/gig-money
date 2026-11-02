@@ -55,9 +55,9 @@
   "id": "M4b",
   "group": "Milestones",
   "item": "Render deploy and judge path working",
-  "status": "Not started",
-  "detail": "Render Starter (always on), password gate, saved fallback drafts, daily health check.",
-  "next": "Deploy once the approval loop works.",
+  "status": "Partly done",
+  "detail": "Prepared 25-28 Oct: Render Blueprint (render.yaml), password gate, request and model-call limits, /health, a daily health-check workflow and an Ansible playbook that copies the sandbox secrets from the vault into Render. 60 tests pass. Not live yet.",
+  "next": "Create the Render service from the Blueprint, run the playbook, register the webhook on the onrender.com URL and smoke-test the judge path.",
   "order": 5,
   "owner": "Claude",
   "effort": "1 day",
@@ -200,7 +200,7 @@
   "item": "Judges can run a working build",
   "status": "Not started",
   "detail": "README setup and run instructions, or a hosted URL. A mockup or static prototype doesn't count.",
-  "next": "Do both: README steps plus a Render URL.",
+  "next": "README deploy steps are written; add the hosted Render URL and judge password once it is live.",
   "order": 14,
   "owner": "Claude",
   "effort": "half a day",
@@ -526,8 +526,8 @@
   "id": "N18",
   "group": "Non-functional",
   "item": "Daily health check until 15 Dec",
-  "status": "Not started",
+  "status": "Partly done",
   "detail": "Scheduled GitHub Actions job checks /health and a dry-run draft on the Render URL.",
-  "next": "Add with the Render deploy."
+  "next": "The workflow (.github/workflows/health.yml) is written; point it at the Render URL once the service is live."
  }
 ]
