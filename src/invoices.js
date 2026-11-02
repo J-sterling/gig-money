@@ -120,7 +120,7 @@ export function createInvoiceBook(db, { paypal, ledger, now = () => new Date() }
       const invoice = event.resource?.invoice ?? event.resource;
       const row = invoice?.id && byPayPalId.get(invoice.id);
       if (!row || row.workspace_id !== invoice.detail?.reference) return { recorded: false, reason: "unknown invoice" };
-      return { recorded: markPaid(row, invoice), reason: null };
+      return markPaid(row, invoice) ? { recorded: true, reason: null } : { recorded: false, reason: "already recorded" };
     },
 
     // Asks PayPal directly; this is how it works locally without webhooks.

@@ -149,6 +149,21 @@ test("a draft from the model waits for approval, then goes out through PayPal", 
   assert.equal((await api(a.cookie, `/drafts/${d.id}/approve`, { method: "POST", body: "{}" })).status, 409);
 });
 
+test("a paid-invoice webhook adds the income without queuing a tag for it", async () => {
+  drafterMode = "ok";
+  const a = await visitor();
+  const ws = decodeURIComponent(a.cookie.split("=")[1]).split(".")[0];
+  const d = await (await api(a.cookie, "/drafts", { method: "POST", body: JSON.stringify({ request: "bill Brightside Yoga £95" }) })).json();
+  const sent = await (await api(a.cookie, `/drafts/${d.id}/approve`, { method: "POST", body: "{}" })).json();
+  verifyResult = true;
+  const before = tagged.length;
+  await post(JSON.stringify({ id: "WH-INV-PAID", event_type: "INVOICING.INVOICE.PAID",
+    resource: { invoice: { id: sent.paypal_id, detail: { reference: ws } } } }));
+  const l = await (await api(a.cookie, "/ledger")).json();
+  assert.equal(l.payments.filter((p) => p.source === "Invoice").length, 1);
+  assert.equal(tagged.length, before); // invoice income is already tagged "Invoice"
+});
+
 test("when the model is unavailable, a labelled saved draft appears instead (N17)", async () => {
   drafterMode = "down";
   const a = await visitor();

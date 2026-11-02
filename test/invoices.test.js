@@ -144,6 +144,16 @@ test("a paid webhook only counts for the invoice's own workspace", async () => {
   assert.equal(ledger.payments(WS).length, 1);
 });
 
+test("a second paid webhook for the same invoice says it's already recorded", async () => {
+  const { book, ledger } = setup();
+  const inv = book.create(WS, { draft, draftedBy: "m" });
+  await book.approve(WS, inv.id);
+  const event = { resource: { invoice: { id: "INV2-TEST-1", detail: { reference: WS } } } };
+  book.recordPaidWebhook(event);
+  assert.deepEqual(book.recordPaidWebhook(event), { recorded: false, reason: "already recorded" });
+  assert.equal(ledger.payments(WS).length, 1);
+});
+
 test("a reminder is a draft until approved, then PayPal logs it to the invoicer only", async () => {
   const { book, calls } = setup();
   const inv = book.create(WS, { draft: { ...draft, client_email: "accounts@northside.example" }, draftedBy: "m" });

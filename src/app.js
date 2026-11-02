@@ -19,7 +19,8 @@ export function createApp({ paypal, config, events, ledger, invoices, drafter, r
   app.set("trust proxy", 1); // Render terminates TLS in front of the app; use the client's IP for limits
   app.use(passwordGate(config.demoPassword ?? ""));
   // Tagging runs after the response so PayPal and the page never wait for the model.
-  const tagLater = (r) => { if (r?.recorded) tag(r.workspaceId, r.id).catch((err) => log.warn(`Tagging failed: ${err.message}`)); };
+  // Only new payments that say which one they are; invoice income arrives already tagged "Invoice".
+  const tagLater = (r) => { if (r?.recorded && r.id) tag(r.workspaceId, r.id).catch((err) => log.warn(`Tagging failed: ${err.message}`)); };
 
   app.get("/health", (_req, res) => res.json({ ok: true, env: "sandbox" }));
 
