@@ -1,4 +1,4 @@
-# Daily check that the judges' demo is up, from submission (11 Nov) until judging ends (15 Dec).
+# Daily check that the judges' demo is up and its AI answers, until judging ends (15 Dec).
 # Needs repo variable DEMO_URL and repo secret DEMO_PASSWORD. A failed run emails the repo owner.
 name: Demo health
 
@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
     inputs:
       force:
-        description: "Run even outside 11 Nov - 15 Dec"
+        description: "Run even outside 2 Nov - 15 Dec"
         type: boolean
         default: false
 
@@ -26,25 +26,30 @@ jobs:
         id: window
         run: |
           today=$(date -u +%F)
-          if [ "${{ inputs.force }}" = "true" ] || { [[ "$today" > "2026-11-10" ]] && [[ "$today" < "2026-12-16" ]]; }; then
+          if [ "${{ inputs.force }}" = "true" ] || { [[ "$today" > "2026-11-01" ]] && [[ "$today" < "2026-12-16" ]]; }; then
             echo "run=yes" >> "$GITHUB_OUTPUT"
           else
-            echo "Outside 11 Nov - 15 Dec ($today); nothing to check."
+            echo "Outside 2 Nov - 15 Dec ($today); nothing to check."
           fi
-      - name: Health, password and a weekly model call
+      - name: Health, password and a real model call
         if: steps.window.outputs.run == 'yes'
         run: |
           set -euo pipefail
           : "${DEMO_URL:?Set the DEMO_URL repo variable}"
-          curl -sSf "$DEMO_URL/health" | grep -q '"ok":true'
+          health=$(curl -sSf "$DEMO_URL/health")
+          echo "$health" | jq -e '.ok == true' > /dev/null
+          # How the last payment was tagged (no payment data): rules means the model failed.
+          if [ "$(echo "$health" | jq -r '.lastTag.by // "none"')" = rules ]; then
+            echo "::error::The last payment was tagged by keyword rules: the model or the Render Workflow didn't answer."; exit 1
+          fi
+          echo "Last tag: $(echo "$health" | jq -c '.lastTag')"
           test "$(curl -s -o /dev/null -w '%{http_code}' "$DEMO_URL/api/ledger")" = 401   # password enforced
           curl -sSf -u "health:$DEMO_PASSWORD" "$DEMO_URL/api/ledger" | grep -q '"summary"'
-          if [ "$(date -u +%u)" = 1 ] || [ "${{ inputs.force }}" = "true" ]; then   # Mondays: one real draft
-            out=$(curl -sSf -u "health:$DEMO_PASSWORD" -H 'Content-Type: application/json' \
-              -d '{"request":"invoice Health Check Ltd £1 for a test, due in 7 days"}' "$DEMO_URL/api/drafts")
-            echo "$out" | grep -q '"status":"draft"'
-            if echo "$out" | grep -q '"drafted_by":"saved example"'; then
-              echo "::warning::The free model didn't answer; judges would see the saved example draft."
-            fi
+          # One real draft a day (1 of the 40 daily model calls); a saved example means the model is down.
+          out=$(curl -sSf -u "health:$DEMO_PASSWORD" -H 'Content-Type: application/json' \
+            -d '{"request":"invoice Health Check Ltd £1 for a test, due in 7 days"}' "$DEMO_URL/api/drafts")
+          echo "$out" | grep -q '"status":"draft"'
+          if echo "$out" | grep -q '"drafted_by":"saved example"'; then
+            echo "::error::The free model didn't answer; judges would see the saved example draft."; exit 1
           fi
           echo "Demo healthy."

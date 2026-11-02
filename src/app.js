@@ -20,9 +20,12 @@ export function createApp({ paypal, config, events, ledger, invoices, drafter, r
   app.use(passwordGate(config.demoPassword ?? ""));
   // Tagging runs after the response so PayPal and the page never wait for the model.
   // Only new payments that say which one they are; invoice income arrives already tagged "Invoice".
-  const tagLater = (r) => { if (r?.recorded && r.id) tag(r.workspaceId, r.id).catch((err) => log.warn(`Tagging failed: ${err.message}`)); };
+  // The last tag's kind is kept (never the payment) so the health check can see the model working.
+  let lastTag = null;
+  const noteTag = (t) => { if (t) lastTag = { by: t.by === "rule" ? "rules" : "model", workflow: / · Render run /.test(t.reason ?? ""), at: new Date().toISOString() }; };
+  const tagLater = (r) => { if (r?.recorded && r.id) tag(r.workspaceId, r.id).then(noteTag).catch((err) => log.warn(`Tagging failed: ${err.message}`)); };
 
-  app.get("/health", (_req, res) => res.json({ ok: true, env: "sandbox" }));
+  app.get("/health", (_req, res) => res.json({ ok: true, env: "sandbox", lastTag }));
 
   // PayPal needs the exact bytes it sent to verify the signature, so this
   // route reads the raw body.

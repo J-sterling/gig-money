@@ -41,7 +41,7 @@ before(async () => {
   const invoices = createInvoiceBook(db, { paypal, ledger });
   const config = { webhookId: "WID", sessionSecret: "test-secret", publicUrl: "http://localhost" };
   const reminderDrafter = async () => { throw new Error("Daily model limit reached"); };
-  const tag = async (ws, id) => { tagged.push([ws, id]); };
+  const tag = async (ws, id) => { tagged.push([ws, id]); return { source: "Craft shop", reason: "A print. · Render run trn-app1", by: "fake/model:free" }; };
   const app = createApp({ paypal, config, events, ledger, invoices, drafter, reminderDrafter, tag, log: quiet });
   await new Promise((r) => (server = app.listen(0, r)));
   base = `http://localhost:${server.address().port}`;
@@ -111,6 +111,18 @@ test("get paid, approve, return: the payment lands in that visitor's ledger only
   assert.equal(lastOrder.description, "Gig Money demo payment");
   assert.ok(tagged.some(([, id]) => id === "CAP-9")); // tagging is queued for the new payment
   assert.equal(lb.payments.length, 10);
+});
+
+test("/health says how the last payment was tagged, with no payment data", async () => {
+  const a = await visitor();
+  await api(a.cookie, "/get-paid", { method: "POST", body: "{}" });
+  await fetch(`${base}/return?token=ORDER-9`, { redirect: "manual" });
+  await new Promise((r) => setImmediate(r)); // tagging runs after the reply
+  const h = await (await fetch(`${base}/health`)).json();
+  assert.equal(h.ok, true);
+  assert.deepEqual({ by: h.lastTag.by, workflow: h.lastTag.workflow }, { by: "model", workflow: true });
+  assert.ok(Date.parse(h.lastTag.at));
+  assert.deepEqual(Object.keys(h.lastTag).sort(), ["at", "by", "workflow"]);
 });
 
 test("an unverified capture webhook never reaches the ledger", async () => {
