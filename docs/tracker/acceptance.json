@@ -55,9 +55,9 @@
   "id": "M4b",
   "group": "Milestones",
   "item": "Render deploy and judge path working",
-  "status": "Partly done",
-  "detail": "Prepared 25-28 Oct: Render Blueprint (render.yaml), password gate, request and model-call limits, /health, a daily health-check workflow and an Ansible playbook that copies the sandbox secrets from the vault into Render. 60 tests pass. Not live yet.",
-  "next": "Create the Render service from the Blueprint, run the playbook, register the webhook on the onrender.com URL and smoke-test the judge path.",
+  "status": "Done",
+  "detail": "Live on 2 Nov at https://gig-money-7c79.onrender.com (Render Starter, Frankfurt, 1 GB disk), behind the demo password. Secrets come from the vault by the Ansible playbook. Proven end to end on the hosted app: sandbox payment captured, AI invoice draft, approved and sent through PayPal Invoicing, paid by the sandbox buyer; CHECKOUT.ORDER.APPROVED, PAYMENT.CAPTURE.COMPLETED and INVOICING.INVOICE.PAID webhooks all verified.",
+  "next": "Keep it up until 15 Dec; suspend with scripts/render.sh only after judging.",
   "order": 5,
   "owner": "Claude",
   "effort": "1 day",
@@ -198,9 +198,9 @@
   "id": "S2",
   "group": "Submission",
   "item": "Judges can run a working build",
-  "status": "Not started",
+  "status": "Partly done",
   "detail": "README setup and run instructions, or a hosted URL. A mockup or static prototype doesn't count.",
-  "next": "README deploy steps are written; add the hosted Render URL and judge password once it is live.",
+  "next": "Hosted URL is live; put the URL, demo password and sandbox buyer login in the Devpost testing instructions.",
   "order": 14,
   "owner": "Claude",
   "effort": "half a day",
@@ -430,9 +430,9 @@
   "id": "N6",
   "group": "Non-functional",
   "item": "Demo stays up and free until judging ends",
-  "status": "Not started",
+  "status": "Partly done",
   "detail": "Render URL up 1-15 Dec; smoke test on 1 Dec; no paywall.",
-  "next": "Pick a Render plan that does not sleep."
+  "next": "Render Starter does not sleep; the daily health check runs 11 Nov-15 Dec. Smoke test on 1 Dec."
  },
  {
   "id": "N7",
@@ -526,8 +526,8 @@
   "id": "N18",
   "group": "Non-functional",
   "item": "Daily health check until 15 Dec",
-  "status": "Partly done",
+  "status": "Done",
   "detail": "Scheduled GitHub Actions job (07:17 UTC daily, 11 Nov-15 Dec) checks /health and that the password is enforced on the Render URL; on Mondays it also makes one real model draft and warns if the saved example appears. Can be run early with force.",
-  "next": "The workflow (.github/workflows/health.yml) is written; point it at the Render URL once the service is live."
+  "next": "Passed on 2 Nov against the live URL (forced run, with a real model draft)."
  }
 ]

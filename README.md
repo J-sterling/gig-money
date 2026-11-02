@@ -6,7 +6,7 @@ A PayPal money assistant for gig workers. Payments arrive from PayPal by webhook
 
 > Built for the PayPal AI Hackathon 2026. Runs against the **PayPal sandbox only**; no real money moves.
 
-**Status (2 Nov 2026):** a working web app at `/`: a ledger with a separate demo workspace per visitor, "Get paid" through PayPal Orders, AI invoice drafts, and an approval gate. Approved drafts go out through PayPal Invoicing, and paying the invoice adds the income to the ledger. New payments are tagged by source by the AI, using your own past payments as examples (keyword rules take over if the model is unavailable), and sent invoices can get an AI-drafted reminder that also waits for approval. The hosted demo is ready to deploy (Render Blueprint, password gate, rate limits and a daily health check); it goes live by 5 Nov.
+**Status (2 Nov 2026):** a working web app at `/`: a ledger with a separate demo workspace per visitor, "Get paid" through PayPal Orders, AI invoice drafts, and an approval gate. Approved drafts go out through PayPal Invoicing, and paying the invoice adds the income to the ledger. New payments are tagged by source by the AI, using your own past payments as examples (keyword rules take over if the model is unavailable), and sent invoices can get an AI-drafted reminder that also waits for approval. The hosted demo is live on Render behind a password, with rate limits and a daily health check.
 
 ## For judges
 
