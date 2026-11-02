@@ -6,7 +6,7 @@ import { test } from "node:test";
 import { openDb } from "../src/db.js";
 import { createLedger } from "../src/ledger.js";
 import { seedWorkspace } from "../src/seed.js";
-import { createTagger, tagWithModel, tagWithRules, OTHER } from "../src/tag-payment.js";
+import { createTagger, tagSchema, tagWithModel, tagWithRules, OTHER } from "../src/tag-payment.js";
 import { createDailyCap } from "../src/model.js";
 
 const WS = "ws_00000000000000aa";
@@ -66,4 +66,20 @@ test("the model may only answer with one of the given categories", async () => {
   assert.equal(r.source, "Photography");
   assert.ok(schema);
   assert.equal(cap.used(), 1);
+});
+
+test("the model gives its reason before it picks a category", () => {
+  // Free models sometimes picked a category their own reason contradicted;
+  // asking for the reason first makes the choice follow from it.
+  assert.deepEqual(Object.keys(tagSchema(["Photography"]).shape), ["reason", "source"]);
+});
+
+test("retries default to one, and a caller can turn them off", async () => {
+  const cap = createDailyCap(5, join(mkdtempSync(join(tmpdir(), "gm-")), "u.json"));
+  const seen = [];
+  const generate = async (args) => { seen.push(args.maxRetries); return { output: { reason: "Shoot.", source: "Photography" }, response: { modelId: "m" } }; };
+  const p = { payer: "Brightside Yoga", note: "class photos", amount_pence: 9500, currency: "GBP" };
+  await tagWithModel(p, ["Photography"], { model: {}, cap, generate });
+  await tagWithModel(p, ["Photography"], { model: {}, cap, generate, maxRetries: 0 });
+  assert.deepEqual(seen, [1, 0]);
 });

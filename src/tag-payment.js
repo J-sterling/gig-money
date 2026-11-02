@@ -12,17 +12,22 @@ Decide from what the payment is for: the note, and the payer only when it is cle
 Never guess from a person's name. If the note doesn't clearly point to one category, answer "${OTHER}".
 In "reason", say in one short sentence which words pointed to that category, or that nothing did.`;
 
+// Reason first: free models sometimes picked a category their own reason
+// contradicted; writing the reason first makes the choice follow from it.
+export function tagSchema(categories) {
+  return z.object({ reason: z.string().min(1), source: z.enum([...new Set([...categories, OTHER])]) });
+}
+
 // examples: { category: ["payer: note", ...] } from the worker's own tagged payments.
-export async function tagWithModel(payment, categories, { examples = {}, model, cap, timeoutMs = 20000, generate = generateText }) {
-  const options = [...new Set([...categories, OTHER])];
+export async function tagWithModel(payment, categories, { examples = {}, model, cap, timeoutMs = 20000, maxRetries = 1, generate = generateText }) {
   const described = categories.map((c) => `- ${c}${examples[c]?.length ? `, e.g. ${examples[c].map((e) => `"${e}"`).join("; ")}` : ""}`).join("\n");
   cap.take();
   const { output, response } = await generate({
     model,
     instructions,
     prompt: `Categories, with examples of the worker's past payments:\n${described}\n- ${OTHER}\n\nNew payment\nPayer: ${payment.payer ?? "unknown"}\nNote: ${payment.note ?? "none"}\nAmount: ${(payment.amount_pence / 100).toFixed(2)} ${payment.currency}`,
-    output: Output.object({ schema: z.object({ source: z.enum(options), reason: z.string().min(1) }) }),
-    maxRetries: 1,
+    output: Output.object({ schema: tagSchema(categories) }),
+    maxRetries,
     timeout: timeoutMs,
   });
   return { source: output.source, reason: output.reason, by: response?.modelId ?? "model" };
