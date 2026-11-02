@@ -9,6 +9,8 @@ import { createInvoiceBook } from "./invoices.js";
 import { createLedger } from "./ledger.js";
 import { createDailyCap, createModel, modelConfig } from "./model.js";
 import { createPayPal } from "./paypal.js";
+import { chooseClassify, createRemoteClassify } from "./workflow-client.js";
+import { Render } from "@renderinc/sdk";
 
 const config = loadConfig();
 requireCredentials(config);
@@ -31,10 +33,15 @@ const drafter = (request) => {
 
 const needModel = () => { if (!model) throw new Error("OPENROUTER_API_KEY is not set"); };
 const reminderDrafter = (invoice) => { needModel(); return draftReminder(invoice, { model, cap, timeoutMs: mc.timeoutMs }); };
-const tag = createTagger({
-  ledger,
-  classify: (payment, categories, examples) => { needModel(); return tagWithModel(payment, categories, { examples, model, cap, timeoutMs: mc.timeoutMs }); },
+// On the Render demo, tagging runs as a Render Workflow (src/tasks/tag-payment.js); locally it runs here.
+const classify = chooseClassify(process.env, {
+  local: (payment, categories, examples) => { needModel(); return tagWithModel(payment, categories, { examples, model, cap, timeoutMs: mc.timeoutMs }); },
+  makeRemote: ({ taskSlug, token }) => {
+    console.log(`Tagging runs on Render Workflows (${taskSlug}).`);
+    return createRemoteClassify({ workflows: new Render({ token }).workflows, taskSlug, cap });
+  },
 });
+const tag = createTagger({ ledger, classify });
 
 const app = createApp({ paypal, config, events: createEventLog(dataPath(config, "events.jsonl")), ledger, invoices, drafter, reminderDrafter, tag });
 if (!config.demoPassword && config.publicUrl.startsWith("https://")) console.warn("DEMO_PASSWORD is not set on a public URL: anyone with the link can use the demo.");
