@@ -526,8 +526,8 @@
   "id": "N18",
   "group": "Non-functional",
   "item": "Daily health check until 15 Dec",
-  "status": "Done",
+  "status": "Partly done",
   "detail": "Scheduled GitHub Actions job (07:17 UTC daily, 11 Nov-15 Dec) checks /health and that the password is enforced on the Render URL; on Mondays it also makes one real model draft and warns if the saved example appears. Can be run early with force.",
-  "next": "Passed on 2 Nov against the live URL (forced run, with a real model draft)."
+  "next": "Passed on 2 Nov against the live URL (forced run, real model draft). Still only warns when the model is down, and the model call is Mondays only from 11 Nov: make a saved-example draft fail the job and check the model daily."
  }
 ]
