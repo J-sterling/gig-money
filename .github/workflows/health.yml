@@ -38,10 +38,14 @@ jobs:
           : "${DEMO_URL:?Set the DEMO_URL repo variable}"
           health=$(curl -sSf "$DEMO_URL/health")
           echo "$health" | jq -e '.ok == true' > /dev/null
-          # How the last payment was tagged (no payment data): rules means the model failed.
-          if [ "$(echo "$health" | jq -r '.lastTag.by // "none"')" = rules ]; then
-            echo "::error::The last payment was tagged by keyword rules: the model or the Render Workflow didn't answer."; exit 1
-          fi
+          # How the last payment was tagged (no payment data): rules means the model failed,
+          # and the demo tags through its Render Workflow, so in-process means that switched off.
+          case "$(echo "$health" | jq -r 'if .lastTag == null then "none" else "\(.lastTag.by) \(.lastTag.workflow)" end')" in
+            none) echo "::warning::No payment tagged since the last deploy; the tagging path isn't checked this run." ;;
+            "model true") ;;
+            rules*) echo "::error::The last payment was tagged by keyword rules: the model or the Render Workflow didn't answer."; exit 1 ;;
+            *) echo "::error::The last payment was tagged in-process, not through the Render Workflow (is RENDER_WORKFLOW_API_KEY set?)."; exit 1 ;;
+          esac
           echo "Last tag: $(echo "$health" | jq -c '.lastTag')"
           test "$(curl -s -o /dev/null -w '%{http_code}' "$DEMO_URL/api/ledger")" = 401   # password enforced
           curl -sSf -u "health:$DEMO_PASSWORD" "$DEMO_URL/api/ledger" | grep -q '"summary"'
