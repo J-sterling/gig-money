@@ -66,15 +66,20 @@ const services = () => {
 test("the workflow service gets the model key and nothing that reaches PayPal or Render", () => {
   const w = services().workflow;
   assert.ok(w, "render.yaml defines a workflow service");
-  assert.match(w, /- key: OPENROUTER_API_KEY\n\s+sync: false/);
+  // Workflow env vars can't be changed through Render's API after creation,
+  // so the key lives in an env group the playbook can update.
+  const [workflow, groups] = w.split(/^envVarGroups:/m);
+  assert.match(workflow, /- fromGroup: gig-money-model/);
+  assert.match(groups, /- name: gig-money-model\n\s+envVars:\n\s+- key: OPENROUTER_API_KEY\n\s+sync: false/);
   assert.doesNotMatch(w, /PAYPAL_|RENDER_|DEMO_PASSWORD|SESSION_SECRET/);
-  assert.doesNotMatch(w, /^\s+plan:/m); // Render rejects a service-level plan on workflows
-  assert.match(w, /startCommand: npm run workflows:start/);
+  assert.doesNotMatch(workflow, /^\s+plan:/m); // Render rejects a service-level plan on workflows
+  assert.match(workflow, /startCommand: npm run workflows:start/);
 });
 
-test("the web service's Render Workflow settings are secrets, never in the repo", () => {
+test("the web service names the tagging task and keeps the Render key secret", () => {
   const web = services().web;
-  for (const key of ["RENDER_TAG_TASK", "RENDER_WORKFLOW_API_KEY"]) assert.match(web, new RegExp(`- key: ${key}\\n\\s+sync: false`), `${key} must be sync: false`);
+  assert.match(web, /- key: RENDER_TAG_TASK\n\s+value: gig-money-workflows\/tagPayment/);
+  assert.match(web, /- key: RENDER_WORKFLOW_API_KEY\n\s+sync: false/);
 });
 
 test("render.yaml keeps secrets out of the repo and the data on the disk", () => {

@@ -24,6 +24,12 @@
       OPENROUTER_API_KEY: OPENROUTER_API_KEY
       DEMO_PASSWORD: ppdemo_password  # gitleaks:allow (a vault name, not a value)
       PAYPAL_WEBHOOK_ID: paypal_webhook_id
+      RENDER_WORKFLOW_API_KEY: render_workflow_api_key  # gitleaks:allow (a vault name, not a value)
+    # The tagging workflow's model key lives in this env group (workflow env
+    # vars can't be changed through the API), so OPENROUTER_API_KEY goes here too.
+    model_group: gig-money-model
+    workflow: gig-money-workflows
+    optional: [PAYPAL_WEBHOOK_ID, RENDER_WORKFLOW_API_KEY]
     wanted: "{{ from_vault if only == '' else from_vault | dict2items | selectattr('key', 'in', only.split(',')) | items2dict }}"
   tasks:
     - name: Load the vault
@@ -37,9 +43,9 @@
         fail_msg: "Not in the vault: {{ (missing + ([] if render_api_key is defined else ['render_api_key'])) | join(', ') }}"
         quiet: true
       vars:
-        # The webhook ID is optional on a full run, since it only exists after the
-        # first deploy; anything named in `only` is required.
-        required: "{{ only.split(',') if only != '' else from_vault.keys() | reject('eq', 'PAYPAL_WEBHOOK_ID') | list }}"
+        # The webhook ID and the workflow key are optional on a full run, since
+        # they come later; anything named in `only` is required.
+        required: "{{ only.split(',') if only != '' else from_vault.keys() | reject('in', optional) | list }}"
         missing: "{{ wanted | dict2items | selectattr('key', 'in', required) | rejectattr('value', 'in', vars) | map(attribute='value') | list }}"
 
     - name: Settings to send
@@ -84,6 +90,46 @@
         body: {}
         status_code: [200, 201, 202]
       when: not dry_run | bool and to_send | length > 0
+      no_log: true
+
+    - name: Find the model key's env group and the tagging workflow
+      ansible.builtin.uri:
+        url: "{{ api }}/{{ item }}"
+        headers: { Authorization: "Bearer {{ render_api_key }}", Accept: application/json }
+      loop: ["env-groups?name={{ model_group }}&limit=1", "workflows?name={{ workflow }}&limit=1"]
+      register: workflow_side
+      check_mode: false
+      when: "'OPENROUTER_API_KEY' in to_send"
+      no_log: true
+
+    - name: Workflow side
+      ansible.builtin.debug:
+        msg: >-
+          {{ 'Would set' if dry_run | bool else 'Setting' }} OPENROUTER_API_KEY in env group {{ model_group }}
+          {{ '(not found: run the Blueprint sync first)' if workflow_side.results[0].json | length == 0 else '' }},
+          then {{ 'not deploy' if dry_run | bool else 'deploy a new version of' }} {{ workflow }}
+          {{ '(not found)' if workflow_side.results[1].json | length == 0 else '' }}.
+      when: "'OPENROUTER_API_KEY' in to_send"
+
+    - name: Set the model key in the env group
+      ansible.builtin.uri:
+        url: "{{ api }}/env-groups/{{ workflow_side.results[0].json[0].id }}/env-vars/OPENROUTER_API_KEY"
+        method: PUT
+        headers: { Authorization: "Bearer {{ render_api_key }}", Accept: application/json }
+        body_format: json
+        body: { value: "{{ lookup('vars', from_vault['OPENROUTER_API_KEY']) }}" }
+      when: "'OPENROUTER_API_KEY' in to_send and not dry_run | bool and workflow_side.results[0].json | length > 0"
+      no_log: true
+
+    - name: Deploy a new workflow version so runs pick it up
+      ansible.builtin.uri:
+        url: "{{ api }}/workflowversions"
+        method: POST
+        headers: { Authorization: "Bearer {{ render_api_key }}", Accept: application/json }
+        body_format: json
+        body: { workflowId: "{{ workflow_side.results[1].json[0].workflow.id }}" }
+        status_code: [200, 201, 202]
+      when: "'OPENROUTER_API_KEY' in to_send and not dry_run | bool and workflow_side.results[1].json | length > 0"
       no_log: true
 
     - name: Done

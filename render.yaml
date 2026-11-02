@@ -41,11 +41,10 @@ services:
         sync: false
       - key: DEMO_PASSWORD
         sync: false
-      # Tagging runs on the workflow service below. Set after it exists:
-      # RENDER_TAG_TASK is "<workflow slug>/tagPayment"; the API key is a
-      # dedicated one, kept in the vault as render_workflow_api_key.
+      # Tagging runs on the workflow service below once the API key is set: a
+      # dedicated Render key, kept in the vault as render_workflow_api_key.
       - key: RENDER_TAG_TASK
-        sync: false
+        value: gig-money-workflows/tagPayment
       - key: RENDER_WORKFLOW_API_KEY
         sync: false
 
@@ -70,5 +69,12 @@ services:
         value: "20000"
       - key: MODEL_REASONING
         value: none
+      - fromGroup: gig-money-model
+
+# Workflow env vars can't be changed through Render's API once created, so the
+# model key sits in this group, which ansible/render-env.yml updates.
+envVarGroups:
+  - name: gig-money-model
+    envVars:
       - key: OPENROUTER_API_KEY
         sync: false
