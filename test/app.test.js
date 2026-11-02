@@ -65,6 +65,19 @@ test("a verified event is logged once; a retry is a duplicate", async () => {
   assert.equal(events.filter((e) => e.id === "WH-A").length, 1);
 });
 
+test("a password-protected deploy doesn't serve the event log, which covers every visitor", async () => {
+  const db = openDb(":memory:");
+  const ledger = createLedger(db);
+  const config = { webhookId: "WID", sessionSecret: "s", publicUrl: "https://demo.example", demoPassword: "pw" };
+  const app = createApp({ paypal, config, events: createEventLog(join(mkdtempSync(join(tmpdir(), "gm-")), "events.jsonl")),
+    ledger, invoices: createInvoiceBook(db, { paypal, ledger }), drafter, log: quiet });
+  const s = await new Promise((r) => { const x = app.listen(0, () => r(x)); });
+  try {
+    const res = await fetch(`http://localhost:${s.address().port}/events`, { headers: { authorization: "Basic " + Buffer.from("judge:pw").toString("base64") } });
+    assert.equal(res.status, 404);
+  } finally { s.close(); }
+});
+
 test("an unverified event is logged as unverified", async () => {
   verifyResult = false;
   const res = await post(JSON.stringify({ id: "WH-B", event_type: "PAYMENT.CAPTURE.COMPLETED" }));

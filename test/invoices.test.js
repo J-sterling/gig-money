@@ -8,18 +8,19 @@ const WS = "ws_00000000000000aa", OTHER = "ws_00000000000000bb";
 const now = () => new Date("2026-11-07T12:00:00Z");
 const draft = { client_name: "Northside Café", client_email: null, amount: 120, currency: "GBP", description: "Saturday shoot", due_date: "2026-11-21" };
 
-function setup({ failCreate = false } = {}) {
+function setup({ failCreate = false, failSends = 0, invoiceStatus = "PAID" } = {}) {
   const calls = [];
+  let seq = 0; // PayPal gives each invoice its own ID
   const paypal = {
-    createInvoice: async (a) => { calls.push(["create", a]); if (failCreate) throw new Error("HTTP 403 NOT_AUTHORIZED"); return { id: "INV2-TEST-1" }; },
-    sendInvoice: async (id) => { calls.push(["send", id]); return { rel: "payer-view", href: "https://www.sandbox.paypal.com/invoice/p/#INV2-TEST-1" }; },
+    createInvoice: async (a) => { calls.push(["create", a]); if (failCreate) throw new Error("HTTP 403 NOT_AUTHORIZED"); return { id: `INV2-TEST-${++seq}` }; },
+    sendInvoice: async (id) => { calls.push(["send", id]); if (failSends-- > 0) throw new Error("HTTP 503 SERVICE_UNAVAILABLE"); return { rel: "payer-view", href: "https://www.sandbox.paypal.com/invoice/p/#INV2-TEST-1" }; },
     remindInvoice: async (id, r) => { calls.push(["remind", id, r]); return {}; },
-    getInvoice: async (id) => { calls.push(["get", id]); return { id, status: "PAID", payments: { paid_amount: { value: "120.00", currency_code: "GBP" }, transactions: [{ payment_id: "PAY-1", payment_date: "2026-11-08" }] } }; },
+    getInvoice: async (id) => { calls.push(["get", id]); return { id, status: invoiceStatus, payments: { paid_amount: { value: "120.00", currency_code: "GBP" }, transactions: [{ payment_id: "PAY-1", payment_date: "2026-11-08" }] } }; },
   };
   const db = openDb(":memory:");
   const ledger = createLedger(db, { now });
   ledger.ensureWorkspace(WS); ledger.ensureWorkspace(OTHER);
-  return { book: createInvoiceBook(db, { paypal, ledger, now }), ledger, calls };
+  return { book: createInvoiceBook(db, { paypal, ledger, now }), ledger, calls, db };
 }
 
 test("making a draft never calls PayPal (N4)", () => {
@@ -75,6 +76,51 @@ test("a failed send is recorded and can be retried", async () => {
   const inv = book.create(WS, { draft, draftedBy: "m" });
   await assert.rejects(book.approve(WS, inv.id), (e) => e.status === 502);
   assert.equal(book.list(WS)[0].status, "failed");
+});
+
+test("a retry after a failed send reuses the PayPal invoice instead of creating a second one", async () => {
+  const { book, calls } = setup({ failSends: 1, invoiceStatus: "DRAFT" });
+  const inv = book.create(WS, { draft, draftedBy: "m" });
+  await assert.rejects(book.approve(WS, inv.id), (e) => e.status === 502);
+  const out = await book.approve(WS, inv.id);
+  assert.equal(out.status, "sent");
+  assert.equal(out.paypal_id, "INV2-TEST-1");
+  assert.deepEqual(calls.map((c) => c[0]), ["create", "send", "get", "send"]);
+});
+
+test("once PayPal has the invoice, a retry can't change it", async () => {
+  const { book, calls } = setup({ failSends: 1, invoiceStatus: "DRAFT" });
+  const inv = book.create(WS, { draft, draftedBy: "m" });
+  await assert.rejects(book.approve(WS, inv.id), (e) => e.status === 502);
+  await assert.rejects(book.approve(WS, inv.id, { amount: 150 }), (e) => e.status === 409 && /unchanged/.test(e.message));
+  assert.equal(book.list(WS)[0].status, "failed");
+  assert.equal(calls.length, 2);
+  // The UI sends every field back; unchanged values still go through.
+  assert.equal((await book.approve(WS, inv.id, { ...draft })).status, "sent");
+});
+
+test("sends and reminders cut off by a restart can be approved again", async () => {
+  const { book, db } = setup();
+  const a = book.create(WS, { draft, draftedBy: "m" });
+  const b = book.create(WS, { draft, draftedBy: "m" });
+  await book.approve(WS, b.id);
+  book.addReminder(WS, b.id, { subject: "Reminder", note: "Hi, a reminder.", draftedBy: "m" });
+  db.prepare("UPDATE invoices SET status = 'sending' WHERE id = ?").run(a.id);
+  db.prepare("UPDATE invoices SET reminder_status = 'sending' WHERE id = ?").run(b.id);
+  assert.equal(book.recoverInterrupted(), 2);
+  assert.equal(book.get(WS, a.id).status, "failed");
+  assert.equal(book.get(WS, b.id).reminder_status, "draft");
+  assert.equal((await book.approve(WS, a.id)).status, "sent");
+});
+
+test("if PayPal sent it before a restart, the retry records it as sent without sending again", async () => {
+  const { book, calls, db } = setup({ invoiceStatus: "UNPAID" });
+  const inv = book.create(WS, { draft, draftedBy: "m" });
+  db.prepare("UPDATE invoices SET status = 'sending', paypal_id = 'INV2-SENT' WHERE id = ?").run(inv.id);
+  book.recoverInterrupted();
+  const out = await book.approve(WS, inv.id);
+  assert.equal(out.status, "sent");
+  assert.deepEqual(calls.map((c) => c[0]), ["get"]);
 });
 
 test("checking with PayPal marks it paid and adds the income to the ledger once", async () => {

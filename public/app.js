@@ -57,6 +57,8 @@ function draftCard(inv) {
     const input = el("input", { name, type, value: value ?? "" });
     if (type === "number") { input.min = "0.01"; input.step = "0.01"; }
     if (name === "client_email") input.placeholder = "none: you'll get a pay link to share";
+    // PayPal already has this invoice from a failed send; a retry sends it unchanged.
+    if (inv.paypal_id) input.readOnly = true;
     return el("label", { className: wide ? "wide" : "" }, label, input);
   };
   const err = el("p", { className: "err", hidden: true });
@@ -65,6 +67,7 @@ function draftCard(inv) {
   const form = el("form", { className: "draft" },
     el("div", { className: "head" }, el("span", { textContent: "Draft · waiting for you" }), el("span", { textContent: `by ${inv.drafted_by}` })),
     el("p", { className: "reason", textContent: inv.reason || "" }),
+    inv.paypal_id ? el("p", { className: "reason", textContent: "PayPal already has this invoice from the first try, so it can't be changed. Approve to send it again, or reject it." }) : "",
     el("div", { className: "fields" },
       field("client_name", "Client", d.client_name, "text", true),
       field("client_email", "Client email", d.client_email, "email", true),

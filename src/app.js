@@ -61,7 +61,9 @@ export function createApp({ paypal, config, events, ledger, invoices, drafter, r
     res.json({ received: true, verified });
   });
 
-  app.get("/events", (_req, res) => res.json(events.latest()));
+  // The raw event log is for checking webhooks locally. It covers every
+  // visitor, so a password-protected (public) deploy doesn't serve it.
+  if (!config.demoPassword) app.get("/events", (_req, res) => res.json(events.latest()));
 
   // Buyer approved the order in PayPal and was sent back here. The capture
   // reply comes from our own authenticated call, so it goes straight into

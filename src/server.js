@@ -17,6 +17,8 @@ const db = openDb(dataPath(config, "gig-money.db"));
 const paypal = createPayPal(config);
 const ledger = createLedger(db, { setAsideRate: config.setAsideRate });
 const invoices = createInvoiceBook(db, { paypal, ledger });
+const recovered = invoices.recoverInterrupted();
+if (recovered) console.warn(`${recovered} send(s) were interrupted by the last restart; they can be approved again.`);
 
 const mc = modelConfig();
 const cap = createDailyCap(mc.dailyLimit, dataPath(config, "model-usage.json"));

@@ -1,6 +1,7 @@
 // Invoice drafts and the approval gate (N4). Drafting never touches PayPal;
 // approve() is the only path that creates and sends a PayPal invoice, and a
-// draft can be approved or rejected once (a failed send can be retried).
+// draft can be approved or rejected once (a failed send can be retried, and
+// reuses the PayPal invoice if one was already created).
 import { randomBytes } from "node:crypto";
 import { InvoiceFields } from "./draft-invoice.js";
 import { ReminderDraft } from "./draft-reminder.js";
@@ -22,7 +23,8 @@ export function createInvoiceBook(db, { paypal, ledger, now = () => new Date() }
     WHERE id = ? AND workspace_id = ? AND status IN ('draft', 'failed')`);
   const reject = db.prepare(`UPDATE invoices SET status = 'rejected', decided_at = ?, decision_note = ?
     WHERE id = ? AND workspace_id = ? AND status = 'draft'`);
-  const sent = db.prepare("UPDATE invoices SET status = 'sent', paypal_id = ?, pay_url = ?, sent_at = ? WHERE id = ?");
+  const created = db.prepare("UPDATE invoices SET paypal_id = ? WHERE id = ?");
+  const sent = db.prepare("UPDATE invoices SET status = 'sent', pay_url = ?, sent_at = ? WHERE id = ?");
   const failed = db.prepare("UPDATE invoices SET status = 'failed', error = ? WHERE id = ?");
   const paid = db.prepare("UPDATE invoices SET status = 'paid', paid_at = ? WHERE id = ? AND status = 'sent'");
   const wipe = db.prepare("DELETE FROM invoices WHERE workspace_id = ?");
@@ -33,6 +35,10 @@ export function createInvoiceBook(db, { paypal, ledger, now = () => new Date() }
     WHERE id = ? AND workspace_id = ? AND status = 'sent' AND reminder_status = 'draft'`);
   const reminderDone = db.prepare("UPDATE invoices SET reminder_status = ?, reminded_at = ? WHERE id = ?");
   const reminderBack = db.prepare("UPDATE invoices SET reminder_status = 'draft' WHERE id = ?");
+  // Run at startup: nothing can still be in flight then.
+  const interrupted = db.prepare(`UPDATE invoices SET status = 'failed', error = 'Interrupted before PayPal confirmed it. Approve again to retry.'
+    WHERE status = 'sending'`);
+  const reminderInterrupted = db.prepare("UPDATE invoices SET reminder_status = 'draft' WHERE reminder_status = 'sending'");
 
   const view = (row) => row && { ...row, draft: JSON.parse(row.draft), reminder: row.reminder ? JSON.parse(row.reminder) : null };
   const mustGet = (ws, id) => {
@@ -69,18 +75,31 @@ export function createInvoiceBook(db, { paypal, ledger, now = () => new Date() }
       const check = InvoiceFields.safeParse(merged);
       if (!check.success) throw new GateError(400, "The edited draft isn't valid: " + check.error.issues.map((i) => `${i.path.join(".")} ${i.message}`).join("; "));
       if (check.data.due_date < now().toISOString().slice(0, 10)) throw new GateError(400, "The due date is in the past.");
+      // PayPal already has this invoice from an earlier attempt, so a retry
+      // sends it as it is; a changed copy would be a second invoice.
+      if (row.paypal_id && JSON.stringify(check.data) !== JSON.stringify(InvoiceFields.parse(JSON.parse(row.draft)))) {
+        throw new GateError(409, "PayPal already has this invoice from the first try, so it can't be changed now. Approve it unchanged to send it, or reject it.");
+      }
       if (claim.run(now().toISOString(), JSON.stringify(check.data), id, ws).changes !== 1) {
         throw new GateError(409, `This draft is already ${row.status}; it can't be approved again.`);
       }
       const d = check.data;
       try {
-        const inv = await paypal.createInvoice({
-          reference: ws, clientName: d.client_name, clientEmail: d.client_email, amount: d.amount, currency: d.currency,
-          description: d.description, dueDate: d.due_date, note: "Gig Money demo invoice (PayPal sandbox).",
-        });
-        const sendReply = await paypal.sendInvoice(inv.id);
-        const payUrl = sendReply?.href ?? sendReply?.links?.find((l) => l.rel === "payer-view")?.href ?? inv.detail?.metadata?.recipient_view_url ?? null;
-        sent.run(inv.id, payUrl, now().toISOString(), id);
+        let paypalId = row.paypal_id, inv = null;
+        if (!paypalId) {
+          inv = await paypal.createInvoice({
+            reference: ws, clientName: d.client_name, clientEmail: d.client_email, amount: d.amount, currency: d.currency,
+            description: d.description, dueDate: d.due_date, note: "Gig Money demo invoice (PayPal sandbox).",
+          });
+          paypalId = inv.id;
+          created.run(paypalId, id); // kept before sending, so a failed send is retried on the same invoice
+        }
+        // A restart can cut in after PayPal sent it but before we recorded that;
+        // then there's nothing left to send.
+        if (!inv) inv = await paypal.getInvoice(paypalId);
+        const sendReply = inv.status && inv.status !== "DRAFT" ? null : await paypal.sendInvoice(paypalId);
+        const payUrl = sendReply?.href ?? sendReply?.links?.find((l) => l.rel === "payer-view")?.href ?? inv?.detail?.metadata?.recipient_view_url ?? null;
+        sent.run(payUrl, now().toISOString(), id);
       } catch (err) {
         failed.run(err.message, id);
         throw new GateError(502, `PayPal didn't take the invoice: ${err.message}`);
@@ -159,5 +178,8 @@ export function createInvoiceBook(db, { paypal, ledger, now = () => new Date() }
     get: (ws, id) => view(mustGet(ws, id)),
 
     reset: (ws) => wipe.run(ws).changes,
+
+    // Sends and reminders cut off by a restart go back to where the worker can retry them.
+    recoverInterrupted: () => interrupted.run().changes + reminderInterrupted.run().changes,
   };
 }
