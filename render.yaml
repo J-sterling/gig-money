@@ -41,3 +41,34 @@ services:
         sync: false
       - key: DEMO_PASSWORD
         sync: false
+      # Tagging runs on the workflow service below. Set after it exists:
+      # RENDER_TAG_TASK is "<workflow slug>/tagPayment"; the API key is a
+      # dedicated one, kept in the vault as render_workflow_api_key.
+      - key: RENDER_TAG_TASK
+        sync: false
+      - key: RENDER_WORKFLOW_API_KEY
+        sync: false
+
+  # Render Workflow that tags each new payment (src/tasks/tag-payment.js): a
+  # model step, then a rules step if the model fails, each visible in the
+  # dashboard. It has no disk and no PayPal or Render secrets, only the model key.
+  - type: workflow
+    name: gig-money-workflows
+    runtime: node
+    region: frankfurt
+    repo: https://github.com/J-sterling/gig-money
+    branch: main
+    buildCommand: npm ci
+    startCommand: npm run workflows:start
+    autoDeployTrigger: commit
+    envVars:
+      - key: NODE_VERSION
+        value: "24"
+      - key: MODEL
+        value: nvidia/nemotron-3.5-super-vl:free,google/gemma-4-31b-it:free
+      - key: MODEL_TIMEOUT_MS
+        value: "20000"
+      - key: MODEL_REASONING
+        value: none
+      - key: OPENROUTER_API_KEY
+        sync: false

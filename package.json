@@ -16,7 +16,8 @@
     "order:create": "node scripts/create-order.js",
     "webhook:remove": "node scripts/remove-webhook.js",
     "draft": "node scripts/draft-invoice.js",
-    "check:model": "node scripts/check-model.js"
+    "check:model": "node scripts/check-model.js",
+    "workflows:start": "node src/tasks/tag-payment.js"
   },
   "dependencies": {
     "@openrouter/ai-sdk-provider": "^3.1.0",
