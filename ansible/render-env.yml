@@ -113,7 +113,7 @@
 
     - name: Set the model key in the env group
       ansible.builtin.uri:
-        url: "{{ api }}/env-groups/{{ workflow_side.results[0].json[0].id }}/env-vars/OPENROUTER_API_KEY"
+        url: "{{ api }}/env-groups/{{ workflow_side.results[0].json[0].envGroup.id }}/env-vars/OPENROUTER_API_KEY"
         method: PUT
         headers: { Authorization: "Bearer {{ render_api_key }}", Accept: application/json }
         body_format: json
