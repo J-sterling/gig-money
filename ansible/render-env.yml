@@ -22,7 +22,7 @@
       PAYPAL_CLIENT_ID: paypal_sandbox_client_id  # gitleaks:allow (a vault name, not a value)
       PAYPAL_CLIENT_SECRET: paypal_sandbox_client_secret  # gitleaks:allow (a vault name, not a value)
       OPENROUTER_API_KEY: openrouter_api_key
-      DEMO_PASSWORD: demo_password  # gitleaks:allow (a vault name, not a value)
+      DEMO_PASSWORD: ppdemo_password  # gitleaks:allow (a vault name, not a value)
       PAYPAL_WEBHOOK_ID: paypal_webhook_id
     wanted: "{{ from_vault if only == '' else from_vault | dict2items | selectattr('key', 'in', only.split(',')) | items2dict }}"
   tasks:
