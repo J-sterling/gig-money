@@ -11,6 +11,8 @@ Gig Money
 A PayPal money assistant for gig workers: every payment tagged by AI, tax set aside, and invoices the AI drafts but only you can send.
 
 ## Inspiration
+Gig Money is built on the PayPal developer platform (Orders v2, Invoicing v2 and verified webhooks, all in the sandbox), with an AI model that tags every payment and drafts invoices and reminders that the worker approves before anything is sent.
+
 Delivery payouts, print sales and the odd photo job all land in one PayPal account. For a multi-app gig worker that means no clear answer to three questions: what's actually mine to spend, how much belongs to the tax office, and who still owes me. Invoicing and chasing late payers eat evenings. We wanted an assistant that does the admin, while the worker stays in control of every message that reaches a client.
 
 ## What it does
@@ -18,8 +20,8 @@ Delivery payouts, print sales and the odd photo job all land in one PayPal accou
 - **AI source tagging.** Each new payment is tagged with where it came from (delivery app, craft shop, photography), using the worker's own past payments as examples. The AI gives its reason, and keyword rules take over if the model is unavailable.
 - **Tax set-aside.** It keeps a running estimate (25% of the last 30 days) and shows a "safe to spend" figure, clearly labelled an estimate, not tax advice.
 - **AI invoices from one sentence.** "invoice Northside Café £120 for Saturday's shoot, due in 14 days" becomes a schema-checked draft with its reasoning shown.
-- **Approval gate.** Nothing reaches a client or PayPal until the worker approves, and the server refuses anything else. On approval, PayPal Invoicing creates and issues the invoice and returns a pay link. When it's paid, the income joins the ledger, through the `INVOICING.INVOICE.PAID` webhook or a "Check payment" call to PayPal.
-- **AI reminders** for late payers, behind the same gate, and logged with PayPal Invoicing.
+- **Approval gate.** No invoice or reminder reaches a client or PayPal until the worker approves, and the server refuses anything else. PayPal doesn't email the client; the worker shares the pay link. On approval, PayPal Invoicing creates and issues the invoice and returns a pay link. When it's paid, the income joins the ledger, through the `INVOICING.INVOICE.PAID` webhook or a "Check payment" call to PayPal.
+- **AI reminders** for late payers, behind the same gate, and logged with PayPal Invoicing (a copy goes to the worker, who sends the text and pay link).
 
 ## How we built it
 - **Node 22+ and Express 5.** The ledger is built-in `node:sqlite`, so there's no database to install. The front end is plain JavaScript.
@@ -33,7 +35,7 @@ Delivery payouts, print sales and the odd photo job all land in one PayPal accou
   - 83 offline tests, with PayPal and the model faked.
   - A daily health check that fails if the AI or the Workflow stops answering.
   - gitleaks secret scanning before every commit and in CI.
-  - Security scanning adapted from my homelab security pipeline: Semgrep and Trivy on every push, plus a weekly passive OWASP ZAP scan of the live demo, which led us to add a strict Content-Security-Policy and other security headers.
+  - Security scanning adapted from our homelab security pipeline: Semgrep and Trivy on every push, plus a weekly passive OWASP ZAP scan of the live demo, which led us to add a strict Content-Security-Policy and other security headers.
   - See `SECURITY.md`.
 
 ## Challenges we ran into
@@ -89,6 +91,6 @@ Everything runs in the PayPal sandbox; no real money moves.
 4. Approve and send: PayPal Invoicing creates it and gives a pay link. Open it, pay as the sandbox buyer, then click Check payment.
 5. Draft reminder on a sent invoice, then approve it. "Reset my demo" starts over.
 
-The AI uses a free model with a daily limit. If it's busy you'll see a clearly labelled saved example, which you can still approve.
+The free model allows about 40 calls a day for everyone (resets 00:00 UTC). After that, or if it's busy, you'll see a clearly labelled saved example, which you can still approve.
 To run it locally instead, follow "Run it" in the README.
 ```
