@@ -13,6 +13,6 @@
   "url": "https://claude.ai/artifact/D85UXFrtZDbF9gs2bDy41H",
   "covers": "How the PayPal sandbox, the Express app, the free model on OpenRouter and local storage connect; what is built versus planned; the non-functional requirements that shape the design.",
   "source": "docs/architecture.html",
-  "updated": "2026-11-02"
+  "updated": "2026-11-03"
  }
 ]
