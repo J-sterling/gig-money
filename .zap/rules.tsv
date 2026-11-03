@@ -1,2 +1,10 @@
 # ZAP baseline rules, one per line: <rule id>\t<IGNORE|WARN|FAIL>\t<reason>.
 # Alerts not listed here are warnings, which fail the job (fail_action: true).
+# Each accepted alert was reviewed on 3 Nov 2026 against the live demo.
+10015	IGNORE	Static files (index.html, app.js, style.css) hold no user data; all per-visitor data comes from /api, which is no-store.
+10027	IGNORE	Comments in the public app.js explain the code (e.g. "never innerHTML"); no secrets or internal hosts.
+10031	IGNORE	False positive: index.html is a static file and never reflects the query string; ZAP matched the form default values it submitted.
+10049	IGNORE	Intended: API responses are no-store because they hold per-visitor ledger data.
+10055	IGNORE	CSP sets default-src plus base-uri, form-action and frame-ancestors; reviewed, no missing directive weakens it for this same-origin page.
+10109	IGNORE	Informational: the page is a small JavaScript app.
+10112	IGNORE	Informational: the signed workspace cookie is the intended session.

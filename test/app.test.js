@@ -136,6 +136,7 @@ test("every response carries the security headers, and API data isn't cached", a
     assert.match(h.get("permissions-policy"), /camera=\(\)/, path);
     assert.equal(h.get("cross-origin-opener-policy"), "same-origin", path);
     assert.equal(h.get("cross-origin-embedder-policy"), "require-corp", path);
+    assert.equal(h.get("cross-origin-resource-policy"), "same-origin", path);
     assert.equal(h.get("x-powered-by"), null, path);
   }
   const { cookie } = await visitor();
