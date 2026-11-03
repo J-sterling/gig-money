@@ -125,6 +125,23 @@ test("/health says how the last payment was tagged, with no payment data", async
   assert.deepEqual(Object.keys(h.lastTag).sort(), ["at", "by", "workflow"]);
 });
 
+test("every response carries the security headers, and API data isn't cached", async () => {
+  for (const path of ["/", "/health", "/app.js"]) {
+    const h = (await fetch(`${base}${path}`)).headers;
+    assert.match(h.get("content-security-policy"), /default-src 'self'.*frame-ancestors 'none'/, path);
+    assert.equal(h.get("x-content-type-options"), "nosniff", path);
+    assert.equal(h.get("x-frame-options"), "DENY", path);
+    assert.match(h.get("strict-transport-security"), /max-age=\d+/, path);
+    assert.equal(h.get("referrer-policy"), "no-referrer", path);
+    assert.match(h.get("permissions-policy"), /camera=\(\)/, path);
+    assert.equal(h.get("cross-origin-opener-policy"), "same-origin", path);
+    assert.equal(h.get("cross-origin-embedder-policy"), "require-corp", path);
+    assert.equal(h.get("x-powered-by"), null, path);
+  }
+  const { cookie } = await visitor();
+  assert.equal((await api(cookie, "/ledger")).headers.get("cache-control"), "no-store");
+});
+
 test("an unverified capture webhook never reaches the ledger", async () => {
   const a = await visitor();
   const ws = decodeURIComponent(a.cookie.split("=")[1]).split(".")[0];

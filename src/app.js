@@ -3,6 +3,7 @@ import { fileURLToPath } from "node:url";
 import express from "express";
 import { savedReminder } from "./draft-reminder.js";
 import { passwordGate } from "./auth.js";
+import { noStore, securityHeaders } from "./headers.js";
 import { GateError } from "./invoices.js";
 import { rateLimit } from "./limits.js";
 import { savedDraft, whyNoModel } from "./saved-draft.js";
@@ -16,6 +17,7 @@ const PUBLIC_DIR = fileURLToPath(new URL("../public", import.meta.url));
 export function createApp({ paypal, config, events, ledger, invoices, drafter, reminderDrafter, tag = async () => {}, log = console }) {
   const app = express();
   app.disable("x-powered-by");
+  app.use(securityHeaders);
   app.set("trust proxy", 1); // Render terminates TLS in front of the app; use the client's IP for limits
   app.use(passwordGate(config.demoPassword ?? ""));
   // Tagging runs after the response so PayPal and the page never wait for the model.
@@ -107,6 +109,7 @@ export function createApp({ paypal, config, events, ledger, invoices, drafter, r
   app.get(["/", "/index.html"], workspace);
 
   const api = express.Router();
+  api.use(noStore);
   api.use(rateLimit({ perMinute: 120 }));
   api.use(express.json({ limit: "10kb" }));
   // Each of these may call the free model, which allows about 50 calls a day in total.
