@@ -11,7 +11,7 @@ Open a GitHub issue without exploit details, or use GitHub's private vulnerabili
 |---|---|---|
 | Real money or live keys | The app refuses to start unless `PAYPAL_ENV=sandbox` | `src/config.js` |
 | Forged PayPal events | Every webhook is checked with PayPal's verify-webhook-signature API; unverified or repeated events never touch the ledger | `src/app.js`, `src/paypal.js` |
-| The AI sending something wrong to a client | A server-side approval gate: invoices and reminders are drafts until the worker approves; a draft can't be approved twice or after rejection; PayPal is asked not to email anyone | `src/invoices.js`, `src/paypal.js` |
+| The AI sending something wrong to a client | A server-side approval gate: invoices and reminders are drafts until the worker approves; a draft can't be approved twice or after rejection; PayPal never emails the client (a reminder emails the worker a copy) | `src/invoices.js`, `src/paypal.js` |
 | Prompt injection through payment notes | The model's answer is schema-checked and limited to the worker's own categories; it can't trigger any action | `src/tag-payment.js`, `src/draft-invoice.js` |
 | Visitors seeing each other's data | Each visitor gets a signed workspace cookie; every query is scoped to it | `src/workspaces.js`, `src/ledger.js` |
 | Floods and runaway AI costs | Per-IP rate limits and a daily model-call cap | `src/limits.js`, `src/model.js` |

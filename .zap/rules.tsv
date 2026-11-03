@@ -5,6 +5,6 @@
 10027	IGNORE	Comments in the public app.js explain the code (e.g. "never innerHTML"); no secrets or internal hosts.
 10031	IGNORE	False positive: index.html is a static file and never reflects the query string; ZAP matched the form default values it submitted.
 10049	IGNORE	Intended: API responses are no-store because they hold per-visitor ledger data.
-10055	IGNORE	CSP sets default-src plus base-uri, form-action and frame-ancestors; reviewed, no missing directive weakens it for this same-origin page.
+10055	IGNORE	The no-fallback CSP directives (base-uri, form-action, frame-ancestors) are all set; ZAP flags one on a non-HTML response where they have no effect. Recheck if the CSP changes.
 10109	IGNORE	Informational: the page is a small JavaScript app.
 10112	IGNORE	Informational: the signed workspace cookie is the intended session.
