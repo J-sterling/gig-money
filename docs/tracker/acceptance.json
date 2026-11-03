@@ -529,5 +529,13 @@
   "status": "Done",
   "detail": "Scheduled GitHub Actions job (07:17 UTC daily, 2 Nov-15 Dec) checks /health, that the password is enforced, how the last payment was tagged, and one real model draft. It fails (and emails) if the draft is the saved example or the last tag fell back to rules.",
   "next": "Passed on 2 Nov against the live URL with a model tag through the Render Workflow."
+ },
+ {
+  "id": "N19",
+  "group": "Non-functional",
+  "item": "Security scanning (SAST, SCA, DAST)",
+  "status": "Done",
+  "detail": "Adapted from my homelab security pipeline. Semgrep and Trivy on every push (0 findings on 3 Nov); weekly passive OWASP ZAP baseline against the live demo, passing after adding security headers (CSP, HSTS, frame-ancestors, CORP); reviewed alerts in .zap/rules.tsv; Dependabot weekly. SECURITY.md lists the controls.",
+  "next": "Watch the weekly ZAP run and Dependabot PRs until 15 Dec."
  }
 ]

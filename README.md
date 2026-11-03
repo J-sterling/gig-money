@@ -1,6 +1,6 @@
 # Gig Money
 
-[![CI](https://github.com/J-sterling/gig-money/actions/workflows/ci.yml/badge.svg)](https://github.com/J-sterling/gig-money/actions/workflows/ci.yml)
+[![CI](https://github.com/J-sterling/gig-money/actions/workflows/ci.yml/badge.svg)](https://github.com/J-sterling/gig-money/actions/workflows/ci.yml) [![Security](https://github.com/J-sterling/gig-money/actions/workflows/security.yml/badge.svg)](https://github.com/J-sterling/gig-money/actions/workflows/security.yml)
 
 A PayPal money assistant for gig workers. Payments arrive from PayPal by webhook and go into a ledger. The AI tags where each one came from, keeps a tax set-aside estimate, and drafts invoices and reminders. Nothing goes to a client until you approve it.
 
@@ -89,6 +89,10 @@ Without `RENDER_TAG_TASK` and `RENDER_WORKFLOW_API_KEY` set (as when you run it 
 4. `.github/workflows/health.yml` checks the demo daily until 15 Dec: `/health`, the password, the last tag (it fails if the model or workflow stopped answering) and one real draft. It needs repo variable `DEMO_URL` and repo secret `DEMO_PASSWORD`.
 
 To try the tasks locally: `render workflows dev -- node src/tasks/tag-payment.js` (Render CLI 2.12+), then `render workflows tasks list --local`.
+
+## Security
+
+Sandbox only, signature-checked webhooks, a server-side approval gate, strict security headers, and SAST, SCA and DAST scanning adapted from my homelab security pipeline. See [SECURITY.md](SECURITY.md).
 
 ## Development
 
