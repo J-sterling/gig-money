@@ -1,0 +1,2 @@
+# ZAP baseline rules, one per line: <rule id>\t<IGNORE|WARN|FAIL>\t<reason>.
+# Alerts not listed here are warnings, which fail the job (fail_action: true).
