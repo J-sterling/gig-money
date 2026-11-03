@@ -15,7 +15,7 @@ A PayPal money assistant for gig workers. Payments arrive from PayPal by webhook
 1. You get your own demo workspace with a month of example income. Other visitors never see it.
 2. **Get paid:** approve the sandbox payment on PayPal with the sandbox buyer login from the testing instructions. It lands in your ledger, and the AI tags where it came from.
 3. **Ask for an invoice** in a sentence, for example "invoice Northside Café £120 for Saturday's shoot, due in 14 days". The AI drafts it.
-4. **Approve and send:** only now does PayPal Invoicing create and send it. You get a pay link.
+4. **Approve and send:** only now does PayPal Invoicing create and issue it. You get a pay link to share with the client.
 5. Open the **pay link**, pay as the sandbox buyer, then **Check payment**: it's marked paid and added to the ledger.
 6. **Draft reminder** on a sent invoice, then approve it. **Reset my demo** starts you over.
 
