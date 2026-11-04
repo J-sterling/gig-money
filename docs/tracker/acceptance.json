@@ -259,8 +259,8 @@
   "group": "Submission",
   "item": "Demo stays free and available until 15 Dec",
   "status": "Partly done",
-  "detail": "Judging runs 1-15 Dec.",
-  "next": "Render Starter stays up; the daily health check runs. Smoke-test on 1 Dec and revoke the workflow API key on 16 Dec.",
+  "detail": "Judging runs 1-15 Dec. OpenRouter judging key (made 4 Nov, $0 limit) lasts to 2 Feb 2027.",
+  "next": "Before 9 Nov: verify the new OpenRouter key on Render, then delete the old 7-day key. Smoke-test on 1 Dec; on 16 Dec revoke the Render workflow API key and the OpenRouter judging key.",
   "order": 19,
   "owner": "You",
   "effort": "",
@@ -282,41 +282,41 @@
   "id": "J1",
   "group": "Judging",
   "item": "Technological Implementation",
-  "status": "Not started",
-  "detail": "Thorough, skilled use of the PayPal platform and the AI tools; a working, non-trivial build. Tie-break 1.",
-  "next": "Several PayPal APIs plus verified webhooks plus offline tests."
+  "status": "Done",
+  "detail": "Thorough, skilled use of the PayPal platform and the AI tools; a working, non-trivial build. Tie-break 1. Covered in the Devpost submission and video, submitted 4 Nov.",
+  "next": ""
  },
  {
   "id": "J2",
   "group": "Judging",
   "item": "Design",
-  "status": "Not started",
-  "detail": "A web UI now covers every flow: ledger, Get paid, invoice drafting, approval, pay link, Check payment, reset.",
-  "next": "Polish: AG Grid ledger, source tags, mobile check."
+  "status": "Done",
+  "detail": "A web UI now covers every flow: ledger, Get paid, invoice drafting, approval, pay link, Check payment, reset. Covered in the Devpost submission and video, submitted 4 Nov.",
+  "next": ""
  },
  {
   "id": "J3",
   "group": "Judging",
   "item": "Potential Impact",
-  "status": "Not started",
-  "detail": "A credible, specific case for a real problem and audience, shown working.",
-  "next": "Gig workers with scattered income and surprise tax bills; show before and after."
+  "status": "Done",
+  "detail": "A credible, specific case for a real problem and audience, shown working. Covered in the Devpost submission and video, submitted 4 Nov.",
+  "next": ""
  },
  {
   "id": "J4",
   "group": "Judging",
   "item": "Innovation / Idea",
-  "status": "Not started",
+  "status": "Partly done",
   "detail": "Creative and different from existing concepts.",
-  "next": "Say why bookkeeping apps miss multi-app income."
+  "next": "Devpost text has no comparison yet: add two sentences on why bookkeeping apps miss multi-app income (editable until 12 Nov)."
  },
  {
   "id": "J5",
   "group": "Judging",
   "item": "Presentation",
-  "status": "Not started",
-  "detail": "The video shows it end to end; the pitch says the problem, who it's for and why it matters.",
-  "next": "Script from the user journey; rehearse under 3 min."
+  "status": "Done",
+  "detail": "The video shows it end to end; the pitch says the problem, who it's for and why it matters. Covered in the Devpost submission and video, submitted 4 Nov.",
+  "next": ""
  },
  {
   "id": "J6",
@@ -334,17 +334,17 @@
   "id": "B1",
   "group": "Prizes",
   "item": "Best Use of PayPal + AI (Honorable Mention, $5k)",
-  "status": "Not started",
-  "detail": "Fits directly: the AI acts through PayPal APIs.",
-  "next": "Stacking: one Grand or one Honorable Mention, plus one sponsor prize."
+  "status": "Done",
+  "detail": "Fits directly: the AI acts through PayPal APIs. Covered in the Devpost submission and video, submitted 4 Nov.",
+  "next": ""
  },
  {
   "id": "B2",
   "group": "Prizes",
   "item": "Best Use of Agentic Commerce (Honorable Mention, $5k)",
-  "status": "Not started",
-  "detail": "The agent drafts, sends (after approval) and chases invoices.",
-  "next": "Show the approval step in the video."
+  "status": "Done",
+  "detail": "The agent drafts, sends (after approval) and chases invoices. Covered in the Devpost submission and video, submitted 4 Nov.",
+  "next": ""
  },
  {
   "id": "B3",
@@ -382,9 +382,9 @@
   "id": "C1",
   "group": "Constraints",
   "item": "Judges may judge from the video and description only",
-  "status": "Not started",
-  "detail": "Rules: judges are not required to test.",
-  "next": "Make the video and description carry the case."
+  "status": "Done",
+  "detail": "Rules: judges are not required to test. Covered in the Devpost submission and video, submitted 4 Nov.",
+  "next": ""
  },
  {
   "id": "N1",
