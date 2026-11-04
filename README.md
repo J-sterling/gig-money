@@ -92,7 +92,7 @@ To try the tasks locally: `render workflows dev -- node src/tasks/tag-payment.js
 
 ## Security
 
-Sandbox only, signature-checked webhooks, a server-side approval gate, strict security headers, and SAST, SCA and DAST scanning adapted from my homelab security pipeline. See [SECURITY.md](SECURITY.md).
+Sandbox only, signature-checked webhooks, a server-side approval gate, AI guardrails that re-check every model answer (tested with a fooled model in `test/injection.test.js`), strict security headers, and SAST, SCA and DAST scanning adapted from my homelab security pipeline. See [SECURITY.md](SECURITY.md).
 
 ## Development
 

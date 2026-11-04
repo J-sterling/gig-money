@@ -36,6 +36,7 @@ Delivery payouts, print sales and the odd photo job all land in one PayPal accou
   - A daily health check that fails if the AI or the Workflow stops answering.
   - gitleaks secret scanning before every commit and in CI.
   - Security scanning adapted from our homelab security pipeline: Semgrep and Trivy on every push, plus a weekly passive OWASP ZAP scan of the live demo, which led us to add a strict Content-Security-Policy and other security headers.
+  - AI guardrails: payer and user text is fenced off as data, and the app re-checks every model answer itself (only the worker's categories, an amount cap, no web links, no invented client emails). `test/injection.test.js` plays a fooled model to prove it.
   - See `SECURITY.md`.
 
 ## Challenges we ran into

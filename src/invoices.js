@@ -147,7 +147,7 @@ export function createInvoiceBook(db, { paypal, ledger, now = () => new Date() }
       const row = mustGet(ws, id);
       const current = row.reminder ? JSON.parse(row.reminder) : null;
       const check = ReminderDraft.safeParse({ subject: edits.subject ?? current?.subject, note: edits.note ?? current?.note });
-      if (!check.success) throw new GateError(400, "The reminder needs a subject and a note (up to 600 characters).");
+      if (!check.success) throw new GateError(400, "The reminder isn't valid: " + check.error.issues.map((i) => `${i.path.join(".")} ${i.message}`).join("; "));
       if (claimReminder.run(JSON.stringify({ ...check.data, drafted_by: current?.drafted_by }), id, ws).changes !== 1) {
         throw new GateError(409, "There's no reminder draft waiting for this invoice.");
       }
