@@ -32,7 +32,7 @@ Delivery payouts, print sales and the odd photo job all land in one PayPal accou
   - A **Render Workflow** runs payment tagging: a `tagPayment` task chains a model step and a rules step, each visible in the Render dashboard, and the ledger row records the run id.
   - Secrets go from an Ansible vault to Render through a playbook.
 - **Safety and quality:**
-  - 83 offline tests, with PayPal and the model faked.
+  - 92 offline tests, with PayPal and the model faked.
   - A daily health check that fails if the AI or the Workflow stops answering.
   - gitleaks secret scanning before every commit and in CI.
   - Security scanning adapted from our homelab security pipeline: Semgrep and Trivy on every push, plus a weekly passive OWASP ZAP scan of the live demo, which led us to add a strict Content-Security-Policy and other security headers.
