@@ -79,7 +79,8 @@ export function createPayPal({ baseUrl, clientId, clientSecret, fetch = globalTh
         subject, note, send_to_invoicer: true, send_to_recipient: false,
       }),
     getInvoice: (id) => call("GET", `/v2/invoicing/invoices/${encodeURIComponent(id)}`, "Reading the invoice"),
-    captureOrder: (id) => call("POST", `/v2/checkout/orders/${encodeURIComponent(id)}/capture`, "Capturing the order", {}),
+    // Full representation: the minimal reply leaves out the description (the worker's note the AI tags from).
+    captureOrder: (id) => call("POST", `/v2/checkout/orders/${encodeURIComponent(id)}/capture`, "Capturing the order", {}, undefined, { Prefer: "return=representation" }),
     // PayPal compares the event byte for byte, so the raw body is spliced in
     // rather than re-serialised.
     verifyWebhook: ({ headers, rawBody, webhookId }) =>

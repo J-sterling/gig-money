@@ -43,3 +43,12 @@ test("verifyWebhook sends the raw event bytes unchanged", async () => {
   assert.ok(sent.endsWith(`"webhook_event":${rawBody}}`));
   assert.equal(JSON.parse(sent).webhook_id, "WID");
 });
+
+test("capturing asks PayPal for the full order, so the payment's note comes back", async () => {
+  // The minimal capture reply leaves out purchase_units[].description, the note
+  // the AI tags from; without this the tag fell back to "Other" on the live demo.
+  const { fetch, calls } = fakeFetch({ ...tokenRoute, "/v2/checkout/orders/O-1/capture": [201, { id: "O-1", status: "COMPLETED" }] });
+  const pp = createPayPal({ baseUrl: "https://x.test", clientId: "id", clientSecret: "s", fetch });
+  await pp.captureOrder("O-1");
+  assert.equal(calls.at(-1).headers.Prefer, "return=representation");
+});
