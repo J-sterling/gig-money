@@ -13,7 +13,7 @@ VAULT="${3:-$HOME/Documents/ansible/group_vars/all/vault.yml}"
 cd "$(dirname "$0")/.."
 
 value=$(ansible-vault view "$VAULT" |
-  awk -v name="$NAME" 'tolower($0) ~ ("^[a-z0-9_]*" name "[a-z0-9_]*:") {sub(/^[^:]*:[ \t]*/,""); gsub(/["\047]/,""); print; exit}')
+  awk -v name="$NAME" 'tolower($0) ~ ("^[a-z0-9_]*" name "[a-z0-9_]*:") {sub(/^[^:]*:[ \t]*/,""); gsub(/["\047]/,""); gsub(/^[ \t\r]+|[ \t\r]+$/,""); print; exit}')
 
 if [ -z "$value" ]; then
   echo "No variable with '$NAME' in its name found in $VAULT" >&2
