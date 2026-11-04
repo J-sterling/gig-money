@@ -247,6 +247,7 @@ footer { color: var(--muted); font-size: 13px; }
         <li>Render deploy prepared: Blueprint, password gate, limits, daily health check, secrets copied from the vault by an Ansible playbook <span class="tag built">built</span></li>
         <li>Live on Render: a sandbox payment, an AI invoice and its payment went end to end, with every PayPal webhook verified <span class="tag built">built</span></li>
         <li>Security scanning: Semgrep and Trivy on every push, a weekly passive OWASP ZAP scan of the live demo, strict security headers (SECURITY.md) <span class="tag built">built</span></li>
+        <li>AI guardrails: request and payment text fenced off as data; the app re-checks every model answer (own categories, amount cap, length caps, no links, no invented emails); tested with a fooled model <span class="tag built">built</span></li>
         <li>Payment tagging runs as a Render Workflow: a model step, then a rules step only if the model fails, each visible in the Render dashboard; the ledger row shows the run id. Live: about 5 s from payment to tag <span class="tag built">built</span></li>
         <li>README, video <span class="tag planned">8 Nov</span></li>
         <li>PayPal Agent Toolkit: left out for now (it pulls in 12 known vulnerabilities) <span class="tag later">revisit</span></li>
