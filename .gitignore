@@ -18,3 +18,21 @@ CLAUDE.md
 
 # Events and ledger written by the app
 var/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Security scan output if run locally (CI uploads these to the Security tab)
+*.sarif
+report_html.html
+report_md.md
+report_json.json
+
+# Video and voiceover files; they belong on YouTube, not in the repo
+*.mov
+*.mp4
+*.wav
+
+# Generated EGM drift reports
+*_DRIFT_REPORT.md
