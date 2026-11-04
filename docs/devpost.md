@@ -76,7 +76,7 @@ Human-in-the-loop design matters most when money is involved: the AI is most use
 ## Links
 - Hosted demo: https://gig-money-7c79.onrender.com
 - Code: https://github.com/J-sterling/gig-money (Apache-2.0)
-- Video: `<YouTube link>`
+- Video: https://youtu.be/iN1purYxrCM
 
 ## Testing instructions (Devpost "testing instructions" field; fill in on Devpost only)
 ```
