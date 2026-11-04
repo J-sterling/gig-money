@@ -15,7 +15,7 @@ Gig Money is built on the PayPal developer platform (Orders v2, Invoicing v2 and
 
 Delivery payouts, print sales and the odd photo job all land in one PayPal account. For a multi-app gig worker that means no clear answer to three questions: what's actually mine to spend, how much belongs to the tax office, and who still owes me. Invoicing and chasing late payers eat evenings. We wanted an assistant that does the admin, while the worker stays in control of every message that reaches a client.
 
-General bookkeeping apps typically start from a bank feed and generic categories, so one PayPal balance fed by three gig apps reads as a single stream of income, with nothing set aside and nobody chased. Gig Money starts from PayPal's own events instead: each payment is tagged by source the moment its webhook lands, using the worker's own history, and the same assistant that sees the income drafts the invoices and reminders.
+General bookkeeping apps typically start from a bank feed, where one PayPal balance fed by three gig apps arrives as a single transfer, so the split between delivery, print and photo income is lost. Gig Money starts from PayPal's own payment events instead: each payment is tagged by source as it is recorded, learning from the worker's own past tags, and invoices the assistant drafts are paid through PayPal Invoicing and flow back into the same ledger.
 
 ## What it does
 - **Get paid.** A sandbox payment through PayPal Orders is captured and lands in the worker's ledger. PayPal's webhook confirms it, and every webhook is signature-checked before it can touch the ledger. Duplicates are recorded once.
