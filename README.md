@@ -21,6 +21,8 @@ A PayPal money assistant for gig workers. Payments arrive from PayPal by webhook
 
 Known limits: the tax figure is an estimate, not tax advice. The AI runs on a free model: if it's slow (over 20 s) or out of daily calls, you'll see a clearly labelled saved example instead, which you can still approve.
 
+**Design pages:** the [user journey](https://j-sterling.github.io/gig-money/user-journey.html) (who it's for and each stage from getting paid to month end) and the [architecture](https://j-sterling.github.io/gig-money/architecture.html) (how PayPal, the app, the model and Render connect).
+
 ## Run it
 
 Needs Node 22.13 or newer (for the built-in SQLite) and a free PayPal developer account. Data is kept in `var/gig-money.db`.

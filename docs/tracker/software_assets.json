@@ -9,8 +9,8 @@
   "where": "PayPal sandbox",
   "cost": "Free",
   "lifecycle": "Current",
-  "security": "Sandbox only; secrets in .env and the Ansible vault",
-  "action": "Never use live credentials; add a gitleaks rule for PAYPAL_CLIENT_SECRET."
+  "security": "Sandbox only; secrets in .env and the Ansible vault; gitleaks rule for PAYPAL_CLIENT_SECRET",
+  "action": ""
  },
  {
   "id": "model",
@@ -23,20 +23,20 @@
   "cost": "Free (rate-limited)",
   "lifecycle": "Current",
   "security": "Key server-side only; free endpoints may log prompts, so synthetic data only",
-  "action": "Free endpoints are flaky (25 Oct: Nemotron 3 Super failing upstream, Gemma rate-limited). Keep the 20 s timeout and saved fallback; re-check with npm run check:model before recording."
+  "action": "Free endpoints are flaky: keep the 20 s timeout and the labelled saved fallback. The daily health check makes one real draft."
  },
  {
   "id": "svc-render",
-  "name": "Render web service",
+  "name": "Render web service and Workflow",
   "category": "Cloud service",
-  "version": "n/a",
+  "version": "Starter plan",
   "licence": "Render terms",
   "licence_status": "Approved with conditions",
   "where": "Render",
-  "cost": "Plan not chosen",
+  "cost": "Starter, about $7 a month ($0.0097/h)",
   "lifecycle": "Current",
-  "security": "HTTPS URL; secrets as environment variables",
-  "action": "Pick a plan that stays up 1-15 Dec; enter its hourly rate in the budget data."
+  "security": "HTTPS; demo password; secrets from the vault by playbook",
+  "action": "Keep up until 15 Dec; revoke the workflow API key on 16 Dec."
  },
  {
   "id": "svc-github",
@@ -48,8 +48,8 @@
   "where": "GitHub",
   "cost": "Free (public repo)",
   "lifecycle": "Current",
-  "security": "Secret scanning and push protection to turn on",
-  "action": "Turn on secret scanning, push protection and Dependabot after the repo is created."
+  "security": "Secret scanning, push protection and Dependabot on (25 Oct)",
+  "action": ""
  },
  {
   "id": "svc-tunnel",
@@ -87,7 +87,7 @@
   "where": "App server",
   "cost": "Free",
   "lifecycle": "Current",
-  "security": "No known CVEs (npm audit, 25 Oct)",
+  "security": "No known CVEs (npm audit, 5 Nov)",
   "action": ""
  },
  {
@@ -100,7 +100,7 @@
   "where": "App server",
   "cost": "Free",
   "lifecycle": "Current",
-  "security": "No known CVEs (npm audit, 25 Oct)",
+  "security": "No known CVEs (npm audit, 5 Nov)",
   "action": ""
  },
  {
@@ -113,7 +113,7 @@
   "where": "App server",
   "cost": "Free",
   "lifecycle": "Current",
-  "security": "No known CVEs (npm audit, 25 Oct)",
+  "security": "No known CVEs (npm audit, 5 Nov)",
   "action": ""
  },
  {
@@ -125,9 +125,9 @@
   "licence_status": "Approved",
   "where": "App server",
   "cost": "Free",
-  "lifecycle": "Current",
-  "security": "Not audited yet (no lockfile)",
-  "action": "Optional: plain fetch may be enough."
+  "lifecycle": "Not used",
+  "security": "Not installed: src/paypal.js calls the REST APIs with fetch",
+  "action": ""
  },
  {
   "id": "lib-express",
@@ -139,7 +139,7 @@
   "where": "App server",
   "cost": "Free",
   "lifecycle": "Current",
-  "security": "No known CVEs (npm audit, 24 Oct)",
+  "security": "No known CVEs (npm audit, 5 Nov)",
   "action": ""
  },
  {
@@ -152,7 +152,20 @@
   "where": "App server",
   "cost": "Free",
   "lifecycle": "Current",
-  "security": "No known CVEs (npm audit, 24 Oct)",
+  "security": "No known CVEs (npm audit, 5 Nov)",
+  "action": ""
+ },
+ {
+  "id": "lib-render-sdk",
+  "name": "@renderinc/sdk",
+  "category": "Runtime library (direct)",
+  "version": "1.6.0",
+  "licence": "MIT",
+  "licence_status": "Approved",
+  "where": "App server and Render Workflow",
+  "cost": "Free",
+  "lifecycle": "Current",
+  "security": "No known CVEs (npm audit, 5 Nov)",
   "action": ""
  },
  {
@@ -164,9 +177,9 @@
   "licence_status": "Approved",
   "where": "Browser",
   "cost": "Free",
-  "lifecycle": "Current",
-  "security": "Not audited yet (no lockfile)",
-  "action": "Community edition only; Enterprise features need a paid licence."
+  "lifecycle": "Not used",
+  "security": "Not installed: the AG Grid prize was skipped",
+  "action": ""
  },
  {
   "id": "rt-node",
@@ -178,8 +191,8 @@
   "where": "Local machine, CI, Render",
   "cost": "Free",
   "lifecycle": "Current release",
-  "security": "n/a",
-  "action": "Set engines to >=22 so judges on an LTS can run it."
+  "security": "engines set to >=22.13 (node:sqlite)",
+  "action": ""
  },
  {
   "id": "dev-gitleaks",
@@ -216,8 +229,8 @@
   "licence_status": "Approved with conditions",
   "where": "Local machine",
   "cost": "Free plan",
-  "lifecycle": "Current",
+  "lifecycle": "Not used for the submission",
   "security": "Collection and environment hold placeholders only",
-  "action": "Export the collection to the repo without credentials."
+  "action": ""
  }
 ]

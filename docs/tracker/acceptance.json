@@ -494,8 +494,8 @@
   "id": "N14",
   "group": "Non-functional",
   "item": "Every component's licence reviewed",
-  "status": "Not started",
-  "detail": "Software assets tab up to date; Apache-2.0 detected by GitHub; AG Grid Community only; Dependabot alerts and security updates on.",
+  "status": "Done",
+  "detail": "Software asset register refreshed 5 Nov: 18 components, licences from package metadata, npm audit clean; Apache-2.0 detected by GitHub; Dependabot alerts and security updates on.",
   "next": "Update the register when dependencies change."
  },
  {

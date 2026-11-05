@@ -44,3 +44,5 @@
 body { margin: 0; padding: 1.5rem clamp(0.75rem, 3vw, 2rem); background: var(--color-bg); color: var(--color-fg); font-family: var(--font-anthropic-sans); }
 .load-note { color: var(--color-bad); font-size: var(--cds-font-size-caption); margin: 0 0 var(--cds-gap-sm); }
 :focus-visible { outline: 2px solid var(--color-fg); outline-offset: 2px; }
+.at-intro { margin: 0 0 var(--cds-gap-md); font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+.at-intro a { color: var(--color-fg); }
