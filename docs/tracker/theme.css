@@ -1,0 +1,46 @@
+/* Theme tokens the claude.ai dashboard runtime used to provide. */
+:root {
+  color-scheme: light dark;
+  --font-anthropic-sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-anthropic-serif: Georgia, "Times New Roman", serif;
+  --cds-font-size-caption: 0.8125rem;
+  --cds-font-size-body: 0.9375rem;
+  --cds-font-size-heading: 1.125rem;
+  --cds-font-size-title: 1.75rem;
+  --cds-font-weight-medium: 500;
+  --cds-gap-xs: 0.25rem;
+  --cds-gap-sm: 0.5rem;
+  --cds-gap-md: 0.75rem;
+  --cds-gap-lg: 1.25rem;
+  --cds-pad-xs: 0.25rem;
+  --cds-pad-sm: 0.5rem;
+  --cds-pad-md: 0.75rem;
+  --cds-pad-lg: 1rem;
+  --cds-radius: 8px;
+  --cds-dur-slow: 300ms;
+  --color-bg: #faf9f7;
+  --color-panel: #ffffff;
+  --color-fg: #1f1e1c;
+  --color-fg-muted: #5f5d58;
+  --color-border-line: #e3e0da;
+  --color-ok: #15803d;
+  --color-warn: #b45309;
+  --color-bad: #b91c1c;
+  --cds-chart-grid: #ece9e3;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-bg: #1c1b1a;
+    --color-panel: #262523;
+    --color-fg: #ecebe8;
+    --color-fg-muted: #a8a59e;
+    --color-border-line: #3a3936;
+    --color-ok: #4ade80;
+    --color-warn: #fbbf24;
+    --color-bad: #f87171;
+    --cds-chart-grid: #33322f;
+  }
+}
+body { margin: 0; padding: 1.5rem clamp(0.75rem, 3vw, 2rem); background: var(--color-bg); color: var(--color-fg); font-family: var(--font-anthropic-sans); }
+.load-note { color: var(--color-bad); font-size: var(--cds-font-size-caption); margin: 0 0 var(--cds-gap-sm); }
+:focus-visible { outline: 2px solid var(--color-fg); outline-offset: 2px; }

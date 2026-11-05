@@ -1,3 +1,12 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PayPal AI Hackathon tracker</title>
+<link rel="stylesheet" href="theme.css">
+<script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js" integrity="sha384-CjloA8y00+1SDAUkjs099PVfnY2KmDC2BZnws9kh8D/lX1s46w6EPhpXdqMfjK6i" crossorigin="anonymous"></script>
+<script src="dash.js"></script>
 <style>
 .at { font-family: var(--font-anthropic-sans); display: grid; gap: var(--cds-gap-lg); }
 .at-head h1 { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: var(--cds-font-size-title); margin: 0; }
@@ -63,7 +72,9 @@
 .at td.due { white-space: nowrap; font-variant-numeric: tabular-nums; }
 .at td.due.late { color: var(--color-bad); font-weight: 600; }
 </style>
-
+</head>
+<body>
+<p class="load-note" id="load-note" hidden></p>
 <div class="at">
   <nav class="at-tabs" role="tablist" aria-label="Views">
     <button role="tab" id="tab-acceptance" aria-controls="acceptance" aria-selected="true">Acceptance criteria</button>
@@ -524,3 +535,5 @@ function drawDesign() {
 
 dash.onData(() => { fillSummary(); drawLeft(); draw(); fillSamSummary(); drawSam(); fillBills(); drawBillsChart(); drawBillsTable(); drawDesign(); });
 </script>
+</body>
+</html>
